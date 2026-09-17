@@ -15,8 +15,8 @@
 # Each line also gets a unique `filename`: the longest original name, normalized,
 # e.g. "Smith_John_disclosure_9_12_25.pdf".  Where different PDFs normalize to
 # the same name, later ones (in path order) get _1, _2, ... appended.  See
-# category.rb for the `category` field and filer.rb for `name`, `title` and
-# `agency`.
+# category.rb for the `category` field, filing.rb for `date` and `date_source`,
+# and filer.rb for `name`, `title` and `agency`.
 
 require "cgi"
 require "digest"
@@ -27,6 +27,7 @@ require "parallel"
 require "yaml"
 require_relative "category"
 require_relative "filer"
+require_relative "filing"
 
 opts = {
   pdf_dir: "input/pdfs",
@@ -152,6 +153,7 @@ lines = Parallel.map(docs.select { |_, doc| doc[:markdown] }) do |sha, doc|
   JSON.generate(
     filename: doc[:filename],
     category: Category.of(fulltext),
+    **Filing.of(doc[:filenames], doc[:path], fulltext),
     original_filenames: doc[:filenames],
     original_path: doc[:path],
     sha256sum: sha,
