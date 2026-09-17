@@ -23,6 +23,7 @@ require "digest"
 require "fileutils"
 require "json"
 require "optparse"
+require "parallel"
 require "yaml"
 require_relative "category"
 require_relative "filer"
@@ -99,8 +100,8 @@ docs = {} # sha256 => { filenames:, markdown: }
 missing = []
 excluded = 0
 
-pdfs.each do |pdf|
-  sha = Digest::SHA256.file(pdf).hexdigest
+shas = Parallel.map(pdfs) { |pdf| Digest::SHA256.file(pdf).hexdigest }
+pdfs.zip(shas).each do |pdf, sha|
   if EXCLUSIONS.include?(sha)
     excluded += 1
     next
@@ -142,24 +143,23 @@ end
 
 FileUtils.mkdir_p(File.dirname(opts[:output]))
 tmp = "#{opts[:output]}.tmp"
-written = 0
-File.open(tmp, "w") do |f|
-  docs.each do |sha, doc|
-    next unless doc[:markdown]
-
-    fulltext = plain_text(File.read(doc[:markdown], encoding: "UTF-8"))
-    f.puts JSON.generate(
-      filename: doc[:filename],
-      category: Category.of(fulltext),
-      original_filenames: doc[:filenames],
-      original_path: doc[:path],
-      sha256sum: sha,
-      fulltext: fulltext,
-      **Filer.of(fulltext).slice(:name, :title, :agency),
-    )
-    written += 1
-  end
+# The text cleanup and regex matching are CPU-bound, so spread them across
+# processes (threads would just queue up behind the GVL).  Parallel.map keeps
+# the input order.
+lines = Parallel.map(docs.select { |_, doc| doc[:markdown] }) do |sha, doc|
+  fulltext = plain_text(File.read(doc[:markdown], encoding: "UTF-8"))
+  JSON.generate(
+    filename: doc[:filename],
+    category: Category.of(fulltext),
+    original_filenames: doc[:filenames],
+    original_path: doc[:path],
+    sha256sum: sha,
+    fulltext: fulltext,
+    **Filer.of(fulltext).slice(:name, :title, :agency),
+  )
 end
+File.open(tmp, "w") { |f| f.puts(lines) }
+written = lines.size
 File.rename(tmp, opts[:output])
 
 puts "#{pdfs.size} PDF(s), #{excluded} excluded, #{docs.size} distinct, #{written} written to #{opts[:output]}"
