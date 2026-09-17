@@ -16,6 +16,7 @@ Almost all of the code in this repo was written by [Claude Code](https://claude.
 | etl/input/ocr/xxx/yyy | chandra ocr of pdfs/xxx/yyy.pdf |
 | etl/models/chandra-mlx-4bit | chandra quantized for MLX; built by `make ocr-model` |
 | etl/output/pdfs.jsonl | pdf metadata for ingestion by site |
+| etl/output/pdfs/disclosures/xxx.pdf | hard link to each PDF named for upload to R2 |
 | site/ | jekyll site for ethics.stateference.com |
 
 ## pdfs.jsonl

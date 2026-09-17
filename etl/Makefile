@@ -3,16 +3,19 @@ PDF_DIR  ?= input/pdfs
 OCR_DIR  ?= input/ocr
 OUTPUT_DIR ?= output
 MODEL_DIR ?= models/chandra-mlx-4bit
+R2_REMOTE ?= r2
+R2_BUCKET ?= ethics-files
 
 DROPS  := $(wildcard $(DROP_DIR)/*.zip)
 STAMPS := $(patsubst $(DROP_DIR)/%.zip,$(PDF_DIR)/%/.extracted,$(DROPS))
 
-.PHONY: all pdfs pdfs-clean $(OUTPUT_DIR)/pdfs.jsonl ocr ocr-model ocr-status ocr-clean ocr-model-clean
+.PHONY: all clean r2-sync r2-sync-dry-run pdfs pdfs-clean $(OUTPUT_DIR)/pdfs.jsonl disclosure-pdfs disclosure-pdfs-clean ocr ocr-model ocr-status ocr-clean ocr-model-clean
 
 # Everything: extract, OCR, then build the output.  The output is made by a
 # sub-make so it runs after OCR even under -j.
 all: ocr
 	$(MAKE) $(OUTPUT_DIR)/pdfs.jsonl
+	$(MAKE) disclosure-pdfs
 
 # extract every drop in $(DROP_DIR) into $(PDF_DIR)/<drop>/
 pdfs: $(STAMPS)
@@ -50,5 +53,36 @@ ocr-status:
 $(OUTPUT_DIR)/pdfs.jsonl: pdfs
 	ruby lib/pdfs_jsonl.rb --pdf-dir $(PDF_DIR) --ocr-dir $(OCR_DIR) --output $@
 
+# hard link every PDF in pdfs.jsonl to $(OUTPUT_DIR)/pdfs/disclosures/<filename>,
+# the directory synced to R2.  Uses the existing pdfs.jsonl; doesn't rebuild it.
+disclosure-pdfs:
+	ruby lib/pdfs_dir.rb --pdf-dir $(PDF_DIR) --jsonl $(OUTPUT_DIR)/pdfs.jsonl --output-dir $(OUTPUT_DIR)/pdfs/disclosures
+
+disclosure-pdfs-clean:
+	rm -rf $(OUTPUT_DIR)/pdfs
+
+# Upload $(OUTPUT_DIR)/pdfs to the R2 bucket served at ethics-files.nathanielstory.com,
+# so <filename> lands at /disclosures/<filename>.  Needs an `r2` rclone remote;
+# see README.md.  --size-only because R2 doesn't keep the local mtimes; rclone
+# sync deletes what's no longer local, so PDFs dropped from pdfs.jsonl go away
+# in the bucket too.
+R2_SYNC = rclone sync $(OUTPUT_DIR)/pdfs $(R2_REMOTE):$(R2_BUCKET) \
+	  --size-only --transfers 16 --checkers 32 --fast-list --stats-one-line --progress \
+	  --header-upload "Cache-Control: public, max-age=31536000, immutable"
+
+# guard: an empty or missing directory would empty the bucket
+r2-sync:
+	@test -n "$$(ls -A $(OUTPUT_DIR)/pdfs/disclosures 2>/dev/null)" || \
+	  { echo "$(OUTPUT_DIR)/pdfs/disclosures is empty; run make disclosure-pdfs first"; exit 1; }
+	$(R2_SYNC)
+
+# What would `make r2-sync` upload and delete?
+r2-sync-dry-run:
+	$(R2_SYNC) --dry-run
+
 ocr-model-clean:
 	rm -rf $(MODEL_DIR)
+
+# delete everything in $(OUTPUT_DIR), but keep the directory
+clean:
+	[ ! -d $(OUTPUT_DIR) ] || find $(OUTPUT_DIR) -mindepth 1 -delete
