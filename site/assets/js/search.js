@@ -1,5 +1,10 @@
-// Search results for /search, backed by the Pagefind index built from the
-// hidden fulltext in _layouts/disclosure.html.
+// The search box, and -- on /search/ -- the results it produces, backed by the
+// Pagefind index built from the hidden fulltext in _layouts/disclosure.html.
+//
+// Both pages that render the form load this.  The form behaves the same on each
+// one; the difference is where a search goes.  /search/ has the results shell,
+// so it answers the search itself and pushes a history entry.  The homepage has
+// no shell, so the URL it builds is a real navigation to /search/.
 //
 // Pagefind returns the whole result set from one search() call, as stubs whose
 // data() is fetched lazily.  Paging is therefore just a slice of that array --
@@ -18,7 +23,6 @@ const SORTS = {
   oldest: { date: "asc" },
 };
 
-const main = document.querySelector("[data-pagefind-bundle]");
 const summaryEl = document.querySelector("[data-search-summary]");
 const resultsEl = document.querySelector("[data-search-results]");
 const pagerEl = document.querySelector("[data-search-pagination]");
@@ -36,6 +40,15 @@ const menu = document.querySelector("[data-category-menu]");
 const clearButton = document.querySelector("[data-category-clear]");
 const boxes = [...document.querySelectorAll("[data-category]")];
 
+// The results shell, which only /search/ has.  Everything above is on both
+// pages; these three are what let this one answer a search rather than send it.
+const hasResults = Boolean(summaryEl && resultsEl && pagerEl);
+
+// Where a search lands.  The form's action is /search/ on both pages -- which
+// on /search/ is the page itself -- so urlFor builds the same string either way
+// and the pager and history entries can use it too.
+const target = form?.getAttribute("action") ?? location.pathname;
+
 let pagefindPromise = null;
 // Counts for every category across the whole index, from pagefind.filters().
 // Used when nothing is being searched; a live search has better numbers.
@@ -50,7 +63,7 @@ function getPagefind() {
   // before anyone searches, and preload() races search() for this call.
   // filters() is also what makes Pagefind return counts alongside each search.
   pagefindPromise ??= (async () => {
-    const api = await import(main.dataset.pagefindBundle);
+    const api = await import(form.dataset.pagefindBundle);
     await api.init();
     baseCounts = (await api.filters()).category ?? null;
     return api;
@@ -86,7 +99,7 @@ function urlFor({ query, categories, sort, page }) {
   if (sort !== "relevance") params.set("sort", sort);
   if (page > 1) params.set("page", String(page));
   const search = params.toString();
-  return search ? `${location.pathname}?${search}` : location.pathname;
+  return search ? `${target}?${search}` : target;
 }
 
 // Identifies a result set, so paging within one doesn't re-run the search.
@@ -327,18 +340,35 @@ function pending() {
   };
 }
 
+// Submitting means "show me this".  On /search/ that's a re-render in place;
+// on the homepage it's the trip to /search/ the form would have made on its
+// own -- but by this route, carrying the categories, which a plain GET drops
+// because the boxes have no `name`.
+function submit(url) {
+  if (hasResults) return go(url);
+  location.assign(url);
+}
+
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
-  go(urlFor(pending()));
+  submit(urlFor(pending()));
 });
 
-menu?.addEventListener("change", () => go(urlFor(pending())));
+// Picking a category re-searches in place on /search/, where there are results
+// for it to narrow.  On the homepage it only relabels the button: nothing has
+// been searched yet, and leaving on the first box ticked would take away the
+// chance to tick a second.
+menu?.addEventListener("change", () => {
+  if (hasResults) go(urlFor(pending()));
+  else renderFilter(pending().categories);
+});
 
 sortSelect?.addEventListener("change", () => go(urlFor(pending())));
 
 clearButton?.addEventListener("click", () => {
   if (!boxes.some((box) => box.checked)) return;
-  go(urlFor({ ...pending(), categories: [] }));
+  if (hasResults) go(urlFor({ ...pending(), categories: [] }));
+  else renderFilter([]);
 });
 
 // Opening the menu is a request to see the counts, so load the index then if a
@@ -356,17 +386,24 @@ input?.addEventListener("input", () => {
   if (value) getPagefind().then((api) => api.preload(value)).catch(() => {});
 });
 
-pagerEl.addEventListener("click", (event) => {
-  const link = event.target.closest("a.page-link");
-  if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
-  event.preventDefault();
-  go(link.getAttribute("href")).then(() => {
-    window.scrollTo({ top: 0 });
-    resultsEl.focus();
+if (hasResults) {
+  pagerEl.addEventListener("click", (event) => {
+    const link = event.target.closest("a.page-link");
+    if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    go(link.getAttribute("href")).then(() => {
+      window.scrollTo({ top: 0 });
+      resultsEl.focus();
+    });
   });
-});
 
-window.addEventListener("popstate", render);
+  window.addEventListener("popstate", render);
 
-resultsEl.tabIndex = -1;
-render();
+  resultsEl.tabIndex = -1;
+  render();
+} else {
+  // Nothing to render without results, but the button still has to name the
+  // selection: coming back to the homepage can restore ticked boxes, so read
+  // the label off the boxes rather than assuming an empty start.
+  renderFilter(pending().categories);
+}

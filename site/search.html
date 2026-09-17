@@ -3,15 +3,15 @@ layout: default
 title: Search
 permalink: /search/
 ---
-{% include navbar.html hide_search=true %}
+{% include navbar.html %}
 
 {%- comment -%}
-  The search box lives under the navbar here rather than in it, so it sits
-  directly above the results it produces.
+  The search box sits directly above the results it produces, in the same band
+  the homepage puts it in.
 
   Below it is a shell only; assets/js/search.js fills it from the Pagefind
-  index.  The bundle path is passed as a data attribute so the script needs no
-  Liquid of its own.
+  index.  Having that shell is what tells the script this is the page that
+  answers a search rather than the one that sends it here.
 {%- endcomment -%}
 <div class="border-bottom bg-body-tertiary py-3">
   <div class="container">
@@ -19,7 +19,7 @@ permalink: /search/
   </div>
 </div>
 
-<main class="container py-4" data-pagefind-bundle="{{ '/pagefind/pagefind.js' | relative_url }}">
+<main class="container py-4">
   <h1 class="visually-hidden">Search</h1>
 
   {%- comment -%}

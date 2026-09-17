@@ -1,17 +1,14 @@
 {%- comment -%}
-  Site navbar with the search box.  The form is a plain GET to /search, so it
-  works without JavaScript; /search/ itself needs JS to render the results.
-  /search/ passes hide_search=true and renders the same form below the navbar,
-  above its results.  _layouts/disclosure.html has its own navbar, which shows
-  the filename and a download button instead.
+  Site navbar: the brand alone.  The search box isn't part of it -- it belongs
+  to the page, which renders search-form.html where it wants it.  On / and
+  /search/ that's a band directly below this, above what the search acts on.
+  _layouts/disclosure.html has its own navbar, which shows the filename and a
+  download button instead.
 {%- endcomment -%}
 <nav class="navbar navbar-expand bg-body-tertiary border-bottom">
   <div class="container-fluid">
     <a class="navbar-brand py-0" href="{{ '/' | relative_url }}">
       <img src="{{ '/assets/img/logo-caps@2x.png' | relative_url }}" width="145" height="32" class="d-inline-block align-text-top" alt="StateReference Ethics">
     </a>
-    {%- unless include.hide_search %}
-    {% include search-form.html classes="d-flex ms-3 flex-grow-1" %}
-    {%- endunless %}
   </div>
 </nav>

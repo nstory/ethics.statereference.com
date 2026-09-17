@@ -1,6 +1,22 @@
 ---
 layout: default
 ---
+{% include navbar.html %}
+
+{%- comment -%}
+  The homepage is the search box: the same form /search/ renders, filter and
+  all, so a search started here is the search that page would have given.
+  assets/js/search.js binds to it, finds no results to fill, and hands the URL
+  it builds to /search/ instead.
+{%- endcomment -%}
+<div class="border-bottom bg-body-tertiary py-3">
+  <div class="container">
+    {% include search-form.html classes="d-flex" categories=true %}
+  </div>
+</div>
+
 <main class="container py-5">
   <h1>Hello, World!</h1>
 </main>
+
+<script type="module" src="{{ '/assets/js/search.js' | relative_url }}"></script>
