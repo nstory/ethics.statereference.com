@@ -24,3 +24,11 @@ One line per PDF, each line is a JSON object with these fields:
 - `original_path` path of one of the original files, relative to `etl/input/pdfs/`, e.g. `2025-08-07-sec/Nathaniel Story Records Request/2012/AlcornRichard§13Disclosure - 11.12.12.pdf`
 - `sha256sum` sha256 of the PDF; unique per line
 - `fulltext` the OCR'd text of the PDF (used for creating the fulltext index)
+- `name` name of the filer, as written on the disclosure form, e.g. `Deborah B. Goldberg`; `null` if the PDF has no form (letters, memos, emails) or the field was left blank
+- `title` filer's title or position, as written on the form, e.g. `State Treasurer and Receiver General`; `null` as for `name`
+- `agency` filer's agency or department, as written on the form, e.g. `Office of the State Treasurer and Receiver General`; `null` as for `name`, and also for forms without an agency field (e.g. § 6A disclosures by legislators)
+
+  `name`, `title` and `agency` are taken from the first form in the PDF and not cleaned up, so the same person or agency can appear with different spellings, capitalization or OCR errors
+
+## TODO
+- [ ] exclusion list (remoed PDFs)

@@ -13,7 +13,8 @@
 # Each line also gets a unique `filename`: the longest original name, normalized,
 # e.g. "Smith_John_disclosure_9.12.25.pdf".  Where different PDFs normalize to
 # the same name, later ones (in path order) get _1, _2, ... appended.  See
-# category.rb for the `category` field.
+# category.rb for the `category` field and filer.rb for `name`, `title` and
+# `agency`.
 
 require "cgi"
 require "digest"
@@ -21,6 +22,7 @@ require "fileutils"
 require "json"
 require "optparse"
 require_relative "category"
+require_relative "filer"
 
 opts = {
   pdf_dir: "input/pdfs",
@@ -141,6 +143,7 @@ File.open(tmp, "w") do |f|
       original_path: doc[:path],
       sha256sum: sha,
       fulltext: fulltext,
+      **Filer.of(fulltext).slice(:name, :title, :agency),
     )
     written += 1
   end
