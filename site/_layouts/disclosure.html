@@ -3,5 +3,6 @@ layout: default
 ---
 <main class="container py-5">
   <h1>{{ page.title }}</h1>
+  <p><a href="{{ page.pdf_url }}">{{ page.disclosure.filename }}</a></p>
   <pre class="text-wrap">{{ page.disclosure | jsonify | escape }}</pre>
 </main>

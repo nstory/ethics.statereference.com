@@ -24,6 +24,10 @@ description: >- # this means to ignore newlines until "baseurl:"
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://ethics.statereference.com" # the base hostname & protocol for your site, e.g. http://example.com
 
+# R2 bucket holding the disclosure PDFs; each PDF is served at
+# <files_url>/disclosures/<filename>.  See etl/Makefile's r2-sync target.
+files_url: "https://ethics-files.nathanielstory.com"
+
 # Build settings
 # theme: minima
 plugins: []
