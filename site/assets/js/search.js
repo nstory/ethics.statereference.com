@@ -120,7 +120,10 @@ function pageNumbers(current, total) {
   return out;
 }
 
-function resultItem(result) {
+// `excerpting` is off when there's no query: Pagefind falls back to the start of
+// the page, which on these is the form's printed title, so every row would carry
+// the same sentence.  The details line is what distinguishes them.
+function resultItem(result, excerpting) {
   const meta = result.meta ?? {};
   const li = document.createElement("li");
   li.className = "py-3 border-bottom";
@@ -139,18 +142,20 @@ function resultItem(result) {
   const details = [meta.year, meta.name, meta.category, meta.position, meta.agency].filter(Boolean);
   if (details.length) {
     const line = document.createElement("p");
-    line.className = "small text-body-secondary mb-1";
+    line.className = `small text-body-secondary ${excerpting ? "mb-1" : "mb-0"}`;
     line.textContent = details.join(" · ");
     li.append(line);
   }
 
-  const excerpt = document.createElement("p");
-  excerpt.className = "small mb-0";
-  // Pagefind escapes the page's text when it builds the excerpt and adds only
-  // <mark> around the matched terms, so this is markup we generated, not the
-  // OCR text.
-  excerpt.innerHTML = result.excerpt;
-  li.append(excerpt);
+  if (excerpting) {
+    const excerpt = document.createElement("p");
+    excerpt.className = "small mb-0";
+    // Pagefind escapes the page's text when it builds the excerpt and adds only
+    // <mark> around the matched terms, so this is markup we generated, not the
+    // OCR text.
+    excerpt.innerHTML = result.excerpt;
+    li.append(excerpt);
+  }
 
   return li;
 }
@@ -233,12 +238,14 @@ async function renderPage(state) {
     history.replaceState({}, "", urlFor(state));
   }
 
-  // Without a query the reader is browsing a category rather than searching it,
-  // so the summary drops the "for ..." and reads as a count of what's there.
+  // Without a query the reader is browsing rather than searching, so the summary
+  // drops the "for ..." and counts disclosures -- there was no search for them
+  // to be the result of.
   const forQuery = query ? ` for “${query}”` : "";
+  const noun = query ? "result" : "disclosure";
 
   if (total === 0) {
-    summaryEl.textContent = `No results${forQuery}${scope(categories)}.`;
+    summaryEl.textContent = `No ${noun}s${forQuery}${scope(categories)}.`;
     resultsEl.replaceChildren();
     pagerEl.replaceChildren();
     showSort(false);
@@ -253,9 +260,9 @@ async function renderPage(state) {
   if (mine !== token) return;
 
   summaryEl.textContent =
-    `${total.toLocaleString()} ${total === 1 ? "result" : "results"}${forQuery}${scope(categories)} · ` +
+    `${total.toLocaleString()} ${total === 1 ? noun : `${noun}s`}${forQuery}${scope(categories)} · ` +
     `showing ${(first + 1).toLocaleString()}–${(first + results.length).toLocaleString()}`;
-  resultsEl.replaceChildren(...results.map(resultItem));
+  resultsEl.replaceChildren(...results.map((result) => resultItem(result, Boolean(query))));
   renderPager(state, totalPages);
   showSort(true);
 }
@@ -267,29 +274,19 @@ async function render() {
   renderFilter(categories);
   if (sortSelect) sortSelect.value = sort;
 
-  if (!query && !categories.length) {
-    token++;
-    cache = { key: null, results: [], counts: null };
-    renderCounts(baseCounts);
-    showSort(false);
-    summaryEl.textContent = "Search the disclosures by name, agency or any text on the form.";
-    resultsEl.replaceChildren();
-    pagerEl.replaceChildren();
-    return;
-  }
-
   const key = cacheKey(state);
   if (key !== cache.key) {
     const mine = ++token;
-    summaryEl.textContent = query ? `Searching for “${query}”…` : "Loading…";
+    summaryEl.textContent = query ? `Searching for “${query}”…` : "Loading disclosures…";
     resultsEl.replaceChildren();
     pagerEl.replaceChildren();
 
     let search;
     try {
       const api = await getPagefind();
-      // A null term filters without searching, which is what a category on its
-      // own means: browse every disclosure of that kind.
+      // A null term filters without searching.  With a category that means
+      // browse every disclosure of that kind; with nothing at all it means
+      // browse the lot, which is what /search/ opens on.
       search = await api.search(query || null, {
         filters: categories.length ? { category: { any: categories } } : {},
         sort: SORTS[sort] ?? {},
