@@ -1,0 +1,27 @@
+---
+layout: default
+title: Search
+permalink: /search/
+---
+{% include navbar.html %}
+
+{%- comment -%}
+  Shell only; assets/js/search.js fills it from the Pagefind index.  The bundle
+  path is passed as a data attribute so the script needs no Liquid of its own.
+{%- endcomment -%}
+<main class="container py-4" data-pagefind-bundle="{{ '/pagefind/pagefind.js' | relative_url }}">
+  <h1 class="visually-hidden">Search</h1>
+
+  <p class="text-body-secondary" data-search-summary role="status" aria-live="polite"></p>
+
+  <ol class="list-unstyled mb-0" data-search-results></ol>
+
+  <nav class="mt-4" aria-label="Search results pages" data-search-pagination></nav>
+
+  <noscript>
+    <p class="alert alert-warning">Search needs JavaScript. Every disclosure is
+    still browsable at its own page under <code>/disclosures/</code>.</p>
+  </noscript>
+</main>
+
+<script type="module" src="{{ '/assets/js/search.js' | relative_url }}"></script>

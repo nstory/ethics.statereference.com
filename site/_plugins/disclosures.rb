@@ -18,7 +18,9 @@ module Disclosures
         page = Jekyll::PageWithoutAFile.new(site, site.source, "disclosures/#{slug}", "index.html")
         page.data.merge!(
           "layout" => "disclosure",
-          "title" => [disclosure["name"], disclosure["category"]].compact.join(" – "),
+          # The longest original filename, which is the one `filename` itself is
+          # derived from, so the title and the slug describe the same file.
+          "title" => disclosure["original_filenames"].max_by(&:length) || disclosure["filename"],
           "disclosure" => disclosure,
           "pdf_url" => "#{files_url}/disclosures/#{disclosure["filename"]}"
         )

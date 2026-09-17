@@ -8,10 +8,10 @@ layout: default
         <img src="{{ '/assets/img/logo-caps@2x.png' | relative_url }}" width="145" height="32" class="d-inline-block align-text-top" alt="StateReference Ethics">
       </a>
       <div class="d-flex align-items-center overflow-hidden ms-3">
-        <span class="navbar-text text-truncate">
-          <a class="link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ page.pdf_url }}">{{ page.disclosure.filename }}</a>
+        <span class="navbar-text text-truncate" title="{{ page.title | escape }}">
+          <a class="link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ page.pdf_url }}">{{ page.title | escape }}</a>
         </span>
-        <a class="btn btn-sm btn-outline-dark ms-3 flex-shrink-0 d-flex align-items-center" href="{{ page.pdf_url }}" download="{{ page.disclosure.filename }}" aria-label="Download" title="Download">
+        <a class="btn btn-sm btn-outline-dark ms-3 flex-shrink-0 d-flex align-items-center" href="{{ page.pdf_url }}" download="{{ page.title | escape }}" aria-label="Download" title="Download">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
             <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
             <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
@@ -24,3 +24,25 @@ layout: default
     <p class="p-3"><a href="{{ page.pdf_url }}">{{ page.disclosure.filename }}</a></p>
   </object>
 </div>
+
+{%- comment -%}
+  Everything Pagefind indexes for this disclosure.  The page itself shows the
+  PDF, so this is hidden: `hidden` keeps it out of the rendered page and out of
+  the accessibility tree, but leaves it in the HTML, which is all Pagefind
+  reads.
+
+  data-pagefind-body narrows indexing to this element -- note that it also
+  drops every page without the attribute from the index.  The empty span
+  carries the fields the search results display; they're in attributes rather
+  than inline (`key:value`) because only one inline value is allowed per
+  element, and it has to come last.
+{%- endcomment -%}
+<div hidden data-pagefind-body>
+  <span data-pagefind-meta="title[data-title], name[data-name], position[data-position], agency[data-agency], filename[data-filename], category[data-category]"
+        data-pagefind-filter="category[data-category]"
+        data-title="{{ page.title | escape }}"
+        data-name="{{ page.disclosure.name | escape }}"
+        data-position="{{ page.disclosure.title | escape }}"
+        data-agency="{{ page.disclosure.agency | escape }}"
+        data-filename="{{ page.disclosure.filename | escape }}"
+        data-category="{{ page.disclosure.category | escape }}"></span>{{ page.disclosure.fulltext | escape }}</div>
