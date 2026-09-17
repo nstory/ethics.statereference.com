@@ -12,13 +12,15 @@
 #
 # Each line also gets a unique `filename`: the longest original name, normalized,
 # e.g. "Smith_John_disclosure_9.12.25.pdf".  Where different PDFs normalize to
-# the same name, later ones (in path order) get _1, _2, ... appended.
+# the same name, later ones (in path order) get _1, _2, ... appended.  See
+# category.rb for the `category` field.
 
 require "cgi"
 require "digest"
 require "fileutils"
 require "json"
 require "optparse"
+require_relative "category"
 
 opts = {
   pdf_dir: "input/pdfs",
@@ -131,12 +133,14 @@ File.open(tmp, "w") do |f|
   docs.each do |sha, doc|
     next unless doc[:markdown]
 
+    fulltext = plain_text(File.read(doc[:markdown], encoding: "UTF-8"))
     f.puts JSON.generate(
       filename: doc[:filename],
+      category: Category.of(fulltext),
       original_filenames: doc[:filenames],
       original_path: doc[:path],
       sha256sum: sha,
-      fulltext: plain_text(File.read(doc[:markdown], encoding: "UTF-8")),
+      fulltext: fulltext,
     )
     written += 1
   end
