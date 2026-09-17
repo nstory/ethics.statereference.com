@@ -1,8 +1,26 @@
 ---
 layout: default
 ---
-<main class="container py-5">
-  <h1>{{ page.title }}</h1>
-  <p><a href="{{ page.pdf_url }}">{{ page.disclosure.filename }}</a></p>
-  <pre class="text-wrap">{{ page.disclosure | jsonify | escape }}</pre>
-</main>
+<div class="d-flex flex-column vh-100">
+  <nav class="navbar navbar-expand bg-body-tertiary border-bottom flex-shrink-0">
+    <div class="container-fluid">
+      <a class="navbar-brand py-0" href="{{ '/' | relative_url }}">
+        <img src="{{ '/assets/img/logo-caps@2x.png' | relative_url }}" width="145" height="32" class="d-inline-block align-text-top" alt="StateReference Ethics">
+      </a>
+      <div class="d-flex align-items-center overflow-hidden ms-3">
+        <span class="navbar-text text-truncate">
+          <a class="link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ page.pdf_url }}">{{ page.disclosure.filename }}</a>
+        </span>
+        <a class="btn btn-sm btn-outline-dark ms-3 flex-shrink-0 d-flex align-items-center" href="{{ page.pdf_url }}" download="{{ page.disclosure.filename }}" aria-label="Download" title="Download">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+  <object class="flex-grow-1 w-100" data="{{ page.pdf_url }}" type="application/pdf">
+    <p class="p-3"><a href="{{ page.pdf_url }}">{{ page.disclosure.filename }}</a></p>
+  </object>
+</div>
