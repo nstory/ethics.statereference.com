@@ -78,8 +78,9 @@ function resultItem(result) {
   li.append(heading);
 
   // The heading is the filename, so this line is the only place the filer's
-  // name appears.
-  const details = [meta.name, meta.category, meta.position, meta.agency].filter(Boolean);
+  // name appears.  The year leads because it's the one fixed-width field, which
+  // makes a column of results easy to scan by date.
+  const details = [meta.year, meta.name, meta.category, meta.position, meta.agency].filter(Boolean);
   if (details.length) {
     const line = document.createElement("p");
     line.className = "small text-body-secondary mb-1";

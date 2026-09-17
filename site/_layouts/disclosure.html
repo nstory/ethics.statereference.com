@@ -38,11 +38,12 @@ layout: default
   element, and it has to come last.
 {%- endcomment -%}
 <div hidden data-pagefind-body>
-  <span data-pagefind-meta="title[data-title], name[data-name], position[data-position], agency[data-agency], filename[data-filename], category[data-category]"
+  <span data-pagefind-meta="title[data-title], name[data-name], position[data-position], agency[data-agency], filename[data-filename], category[data-category], year[data-year]"
         data-pagefind-filter="category[data-category]"
         data-title="{{ page.title | escape }}"
         data-name="{{ page.disclosure.name | escape }}"
         data-position="{{ page.disclosure.title | escape }}"
         data-agency="{{ page.disclosure.agency | escape }}"
         data-filename="{{ page.disclosure.filename | escape }}"
-        data-category="{{ page.disclosure.category | escape }}"></span>{{ page.disclosure.fulltext | escape }}</div>
+        data-category="{{ page.disclosure.category | escape }}"
+        data-year="{{ page.disclosure.date | slice: 0, 4 }}"></span>{{ page.disclosure.fulltext | escape }}</div>
