@@ -9,14 +9,16 @@ layout: default
   assets/js/search.js binds to it, finds no results to fill, and hands the URL
   it builds to /search/ instead.
 {%- endcomment -%}
-<div class="border-bottom bg-body-tertiary py-3">
+<div class="bg-light py-5">
   <div class="container">
+    <h1 class="display-1">Ethics Disclosures Database</h1>
+    <p class="lead">This database contains X,XXX conflict of interest disclosures filed by Massachusetts officials.</p>
     {% include search-form.html classes="d-flex" categories=true %}
   </div>
 </div>
 
-<main class="container py-5">
-  <h1>Hello, World!</h1>
-</main>
+<div class="container">
+  <h2 class="display-2">What is this?</h2>
+</div>
 
 <script type="module" src="{{ '/assets/js/search.js' | relative_url }}"></script>

@@ -17,7 +17,7 @@ index:
 # Watching would regenerate _site and delete the index underneath us, so the
 # server runs against the build made above.  Re-run `make serve` after edits.
 serve: build
-	$(JEKYLL) serve --skip-initial-build --no-watch
+	$(JEKYLL) serve --skip-initial-build --watch
 
 clean:
 	rm -rf _site .jekyll-cache .jekyll-metadata
