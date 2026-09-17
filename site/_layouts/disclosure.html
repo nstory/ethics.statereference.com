@@ -36,14 +36,21 @@ layout: default
   carries the fields the search results display; they're in attributes rather
   than inline (`key:value`) because only one inline value is allowed per
   element, and it has to come last.
+
+  The sort key is the filing date.  Most are a full ISO date but about one in
+  twelve is a bare year, and Pagefind compares a sort key as text unless every
+  value is numeric -- so the short ones sort to the edge of their year rather
+  than out of it, which is as good as the date we have.
 {%- endcomment -%}
 <div hidden data-pagefind-body>
   <span data-pagefind-meta="title[data-title], name[data-name], position[data-position], agency[data-agency], filename[data-filename], category[data-category], year[data-year]"
         data-pagefind-filter="category[data-category]"
+        data-pagefind-sort="date[data-date]"
         data-title="{{ page.title | escape }}"
         data-name="{{ page.disclosure.name | escape }}"
         data-position="{{ page.disclosure.title | escape }}"
         data-agency="{{ page.disclosure.agency | escape }}"
         data-filename="{{ page.disclosure.filename | escape }}"
         data-category="{{ page.disclosure.category | escape }}"
+        data-date="{{ page.disclosure.date }}"
         data-year="{{ page.disclosure.date | slice: 0, 4 }}"></span>{{ page.disclosure.fulltext | escape }}</div>

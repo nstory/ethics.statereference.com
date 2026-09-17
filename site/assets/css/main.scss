@@ -4,3 +4,14 @@
 // See node_modules/bootstrap/scss/_variables.scss for the full list.
 
 @import "bootstrap/scss/bootstrap";
+
+// The category filter's label grows with the name of the chosen category, and
+// on a phone "Appearance of Conflict" leaves the search box about 85px wide.
+// Cap it there and let it ellipsize; the menu still shows the full name.
+[data-category-toggle-label] {
+  max-width: 6rem;
+
+  @include media-breakpoint-up(sm) {
+    max-width: none;
+  }
+}

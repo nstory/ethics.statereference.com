@@ -1,0 +1,45 @@
+{%- comment -%}
+  The search box itself, shared by the navbar and /search/.  assets/js/search.js
+  binds to the one instance on the page, so only ever render it once.
+
+  Pass categories=true to append the category filter, an input-group dropdown of
+  checkboxes.  It's JS-only: the boxes carry no `name`, so a no-JS GET submits
+  the query alone, which is all /search/ could act on without JS anyway.  The
+  submit button is the exception -- it works with or without JS, and it has to
+  come last in the group so the filter isn't the control that looks like the
+  action.
+{%- endcomment -%}
+<form class="{{ include.classes }}" role="search" action="{{ '/search/' | relative_url }}" method="get" data-search-form>
+  <div class="input-group" style="max-width: 40rem">
+    <input class="form-control" type="search" name="q"
+           placeholder="Search disclosures" aria-label="Search disclosures"
+           autocomplete="off" data-search-input>
+    {%- if include.categories %}
+    <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center" type="button"
+            data-bs-toggle="dropdown" data-bs-auto-close="outside"
+            aria-expanded="false" data-category-toggle>
+      {%- comment -%}
+        The label names the selection, so it's as wide as the longest category.
+        Truncating the span rather than the button keeps the caret visible; the
+        width it truncates to is in main.scss.
+      {%- endcomment -%}
+      <span class="text-truncate" data-category-toggle-label>All categories</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" data-category-menu>
+      {%- for category in site.data.categories %}
+      <li>
+        <label class="dropdown-item d-flex align-items-center gap-2">
+          <input class="form-check-input mt-0 flex-shrink-0" type="checkbox"
+                 value="{{ category | slugify }}" data-category="{{ category | escape }}">
+          <span class="flex-grow-1">{{ category | escape }}</span>
+          <span class="small text-body-secondary" data-category-count></span>
+        </label>
+      </li>
+      {%- endfor %}
+      <li><hr class="dropdown-divider"></li>
+      <li><button class="dropdown-item" type="button" data-category-clear>All categories</button></li>
+    </ul>
+    {%- endif %}
+    <button class="btn btn-primary" type="submit">Search</button>
+  </div>
+</form>
