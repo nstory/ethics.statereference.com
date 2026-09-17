@@ -1,6 +1,13 @@
 # ethics.statereference.com
 Database for Massachusetts conflict of interest law ethics disclosures.
 
+[Visit the site](https://ethics.statereference.com)
+
+## AI Policy
+Almost all of the code in this repo was written by [Claude Code](https://claude.com/product/claude-code). Two principles:
+- AI is for writing code that's run by the computer
+- AI is not for writing English that's read by humans
+
 ## directories
 | path | purpose |
 |--------|-------|
@@ -29,6 +36,3 @@ One line per PDF, each line is a JSON object with these fields:
 - `agency` filer's agency or department, as written on the form, e.g. `Office of the State Treasurer and Receiver General`; `null` as for `name`, and also for forms without an agency field (e.g. § 6A disclosures by legislators)
 
   `name`, `title` and `agency` are taken from the first form in the PDF and not cleaned up, so the same person or agency can appear with different spellings, capitalization or OCR errors
-
-## TODO
-- [ ] exclusion list (remoed PDFs)

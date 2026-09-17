@@ -10,6 +10,8 @@
 # been OCRed.  PDFs with no OCR yet are skipped with a warning; rerun after
 # `make ocr`.
 #
+# PDFs whose sha256 is listed in exclusions.yml are left out entirely.
+#
 # Each line also gets a unique `filename`: the longest original name, normalized,
 # e.g. "Smith_John_disclosure_9.12.25.pdf".  Where different PDFs normalize to
 # the same name, later ones (in path order) get _1, _2, ... appended.  See
@@ -21,6 +23,7 @@ require "digest"
 require "fileutils"
 require "json"
 require "optparse"
+require "yaml"
 require_relative "category"
 require_relative "filer"
 
@@ -28,6 +31,7 @@ opts = {
   pdf_dir: "input/pdfs",
   ocr_dir: "input/ocr",
   output: "output/pdfs.jsonl",
+  exclusions: "exclusions.yml",
 }
 
 OptionParser.new do |o|
@@ -35,10 +39,12 @@ OptionParser.new do |o|
   o.on("--pdf-dir DIR") { |v| opts[:pdf_dir] = v }
   o.on("--ocr-dir DIR") { |v| opts[:ocr_dir] = v }
   o.on("--output FILE") { |v| opts[:output] = v }
+  o.on("--exclusions FILE") { |v| opts[:exclusions] = v }
 end.parse!
 
 PDF_DIR = File.expand_path(opts[:pdf_dir])
 OCR_DIR = File.expand_path(opts[:ocr_dir])
+EXCLUSIONS = YAML.load_file(opts[:exclusions]).to_set
 
 # Same layout ocr.rb writes: <pdf_dir>/<drop>/<rel>.pdf -> <ocr_dir>/<drop>/<rel>/<stem>.md
 def ocr_markdown_path(pdf)
@@ -91,9 +97,15 @@ pdfs = Dir.glob(File.join(PDF_DIR, "*", "**", "*.pdf"), File::FNM_CASEFOLD).sort
 
 docs = {} # sha256 => { filenames:, markdown: }
 missing = []
+excluded = 0
 
 pdfs.each do |pdf|
   sha = Digest::SHA256.file(pdf).hexdigest
+  if EXCLUSIONS.include?(sha)
+    excluded += 1
+    next
+  end
+
   doc = docs[sha] ||= { filenames: [], markdown: nil }
   name = File.basename(pdf)
   doc[:filenames] << name unless doc[:filenames].include?(name)
@@ -150,4 +162,4 @@ File.open(tmp, "w") do |f|
 end
 File.rename(tmp, opts[:output])
 
-puts "#{pdfs.size} PDF(s), #{docs.size} distinct, #{written} written to #{opts[:output]}"
+puts "#{pdfs.size} PDF(s), #{excluded} excluded, #{docs.size} distinct, #{written} written to #{opts[:output]}"
