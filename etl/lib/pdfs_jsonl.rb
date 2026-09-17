@@ -13,7 +13,7 @@
 # PDFs whose sha256 is listed in exclusions.yml are left out entirely.
 #
 # Each line also gets a unique `filename`: the longest original name, normalized,
-# e.g. "Smith_John_disclosure_9.12.25.pdf".  Where different PDFs normalize to
+# e.g. "Smith_John_disclosure_9_12_25.pdf".  Where different PDFs normalize to
 # the same name, later ones (in path order) get _1, _2, ... appended.  See
 # category.rb for the `category` field and filer.rb for `name`, `title` and
 # `agency`.
@@ -82,15 +82,16 @@ def plain_text(markdown)
     .strip
 end
 
-# The longest original name, reduced to ASCII letters, digits, "_", "." and "-"
-# so it's safe in URLs and shell commands.
+# The longest original name, reduced to ASCII letters, digits, "_" and "-" so
+# it's safe in URLs and shell commands.  Dots in the stem become "_" (Jekyll
+# mangles URLs containing ".." or ending in ".").
 def normalized_filename(filenames)
   name = filenames.max_by(&:length)
   stem = File.basename(name, ".*")
     .unicode_normalize(:nfd).gsub(/\p{Mn}/, "") # deburr: "Díaz" -> "Diaz"
-    .gsub(/\s+/, "_")
-    .gsub(/[^A-Za-z0-9_.-]/, "")
-    .squeeze("_").sub(/\A[_.-]+/, "").delete_suffix("_") # no hidden files
+    .gsub(/[\s.]+/, "_")
+    .gsub(/[^A-Za-z0-9_-]/, "")
+    .squeeze("_").sub(/\A[_-]+/, "").delete_suffix("_")
   [stem.empty? ? "document" : stem, File.extname(name).downcase]
 end
 

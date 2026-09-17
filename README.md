@@ -16,10 +16,11 @@ Almost all of the code in this repo was written by [Claude Code](https://claude.
 | etl/input/ocr/xxx/yyy | chandra ocr of pdfs/xxx/yyy.pdf |
 | etl/models/chandra-mlx-4bit | chandra quantized for MLX; built by `make ocr-model` |
 | etl/output/pdfs.jsonl | pdf metadata for ingestion by site |
+| site/ | jekyll site for ethics.stateference.com |
 
 ## pdfs.jsonl
 One line per PDF, each line is a JSON object with these fields:
-- `filename` unique filename for the PDF: the longest of `original_filenames`, deburred, spaces converted to underscores and characters other than letters, numbers, `_`, `.` and `-` removed, e.g. `Smith_John_930CMR5.082d2_disclosure_9.12.25.pdf`; if different PDFs end up with the same name (ignoring case), later ones get `_1`, `_2`, etc. appended before `.pdf`
+- `filename` unique filename for the PDF: the longest of `original_filenames`, deburred, spaces and dots converted to underscores (runs of underscores squeezed to one) and characters other than letters, numbers, `_` and `-` removed, e.g. `Smith_John_930CMR5_082d2_disclosure_9_12_25.pdf`; if different PDFs end up with the same name (ignoring case), later ones get `_1`, `_2`, etc. appended before `.pdf`
 - `category` broad type of disclosure, one of:
   - `Financial Interest` financial interest in an official action or a public contract (G.L. c. 268A §§ 6, 6A, 7, 13, 19, 20; 930 CMR 6.05–6.07, 6.13, 6.25, 6.26)
   - `Travel & Gifts` travel expenses, event attendance, honoraria and gifts (930 CMR 5.06, 5.08)

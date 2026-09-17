@@ -21,7 +21,7 @@
 title: StateReference Ethics Database
 description: >- # this means to ignore newlines until "baseurl:"
   Conflict of interest law disclosures from Massachusetts officials
-baseurl: "/" # the subpath of your site, e.g. /blog
+baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://ethics.statereference.com" # the base hostname & protocol for your site, e.g. http://example.com
 
 # Build settings
