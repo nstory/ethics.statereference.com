@@ -6,8 +6,9 @@
 #
 # The drops repeat documents -- the same file shows up under different names,
 # years and drops -- so we key on the hash and collect every basename.  The
-# fulltext comes from the first copy (in path order) that has been OCRed.  PDFs
-# with no OCR yet are skipped with a warning; rerun after `make ocr`.
+# fulltext and original_path come from the first copy (in path order) that has
+# been OCRed.  PDFs with no OCR yet are skipped with a warning; rerun after
+# `make ocr`.
 #
 # Each line also gets a unique `filename`: the longest original name, normalized,
 # e.g. "Smith_John_disclosure_9.12.25.pdf".  Where different PDFs normalize to
@@ -98,6 +99,7 @@ pdfs.each do |pdf|
   md = ocr_markdown_path(pdf)
   if File.exist?(md)
     doc[:markdown] = md
+    doc[:path] = pdf.delete_prefix("#{PDF_DIR}/")
   else
     missing << [pdf, sha]
   end
@@ -132,6 +134,7 @@ File.open(tmp, "w") do |f|
     f.puts JSON.generate(
       filename: doc[:filename],
       original_filenames: doc[:filenames],
+      original_path: doc[:path],
       sha256sum: sha,
       fulltext: plain_text(File.read(doc[:markdown], encoding: "UTF-8")),
     )

@@ -38,7 +38,7 @@ OCR_DIR = File.expand_path(opts[:ocr_dir])
 
 # A PDF at <pdf_dir>/<drop>/<rel>.pdf gets OCRed into <ocr_dir>/<drop>/<rel>/.
 # We keep <rel>'s subdirectories rather than flattening to the basename because
-# basenames collide (91 of them in sec-2025-08-07 alone).
+# basenames collide (91 of them in 2025-08-07-sec alone).
 Job = Struct.new(:pdf, :dest_dir, :stem, keyword_init: true)
 
 def stale?(pdf, dest_dir, stem)

@@ -7,7 +7,12 @@ MODEL_DIR ?= models/chandra-mlx-4bit
 DROPS  := $(wildcard $(DROP_DIR)/*.zip)
 STAMPS := $(patsubst $(DROP_DIR)/%.zip,$(PDF_DIR)/%/.extracted,$(DROPS))
 
-.PHONY: pdfs pdfs-clean $(OUTPUT_DIR)/pdfs.jsonl ocr ocr-model ocr-status ocr-clean ocr-model-clean
+.PHONY: all pdfs pdfs-clean $(OUTPUT_DIR)/pdfs.jsonl ocr ocr-model ocr-status ocr-clean ocr-model-clean
+
+# Everything: extract, OCR, then build the output.  The output is made by a
+# sub-make so it runs after OCR even under -j.
+all: ocr
+	$(MAKE) $(OUTPUT_DIR)/pdfs.jsonl
 
 # extract every drop in $(DROP_DIR) into $(PDF_DIR)/<drop>/
 pdfs: $(STAMPS)
