@@ -3,22 +3,19 @@ layout: default
 ---
 {% include navbar.html %}
 
-{%- comment -%}
-  The homepage is the search box: the same form /search/ renders, filter and
-  all, so a search started here is the search that page would have given.
-  assets/js/search.js binds to it, finds no results to fill, and hands the URL
-  it builds to /search/ instead.
-{%- endcomment -%}
 <div class="bg-light py-5">
   <div class="container">
     <h1 class="display-1">Ethics Disclosures Database</h1>
-    <p class="lead">This database contains X,XXX conflict of interest disclosures filed by Massachusetts officials.</p>
+    <p class="lead">The <i>StateReference Ethics</i> database contains X,XXX conflict of interest disclosures filed by Massachusetts officials.</p>
     {% include search-form.html classes="d-flex" categories=true %}
   </div>
 </div>
 
 <div class="container">
   <h2 class="display-2">What is this?</h2>
+  <p>The <a href="https://www.mass.gov/info-details/gl-c-268a-the-conflict-of-interest-law-as-amended-by-c-248-acts-of-2024">Massachusetts Conflict of Interest Law (G.L. c. 268A)</a> requires that public employees file certain disclosures when a conflict of interest could be present. Examples include: being reimbursed for travel expenses, having a financial interest related to your position, or otherwise having the appearance of a conflict of interest.</p>
+  <p>The conflict of interest law is administered by the <a href="https://www.mass.gov/orgs/state-ethics-commission">State Ethics Commission</a>. The commission is the custodian for <a href="https://www.mass.gov/info-details/conflict-of-interest-law-disclosures-filed-with-the-state-ethics-commission">disclosures directly filed with the commission</a>, however, the vast majority of state employees file their disclosures with their appointing authorities.</p>
+  <p>The goal of this database is to collect these disclosures in a single place and make them searchable.</p>
 </div>
 
 <script type="module" src="{{ '/assets/js/search.js' | relative_url }}"></script>

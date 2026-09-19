@@ -3,6 +3,10 @@
 // Bootstrap variable overrides go here, before the import.
 // See node_modules/bootstrap/scss/_variables.scss for the full list.
 
+// Base text size.  Bootstrap derives headings, buttons and form controls from
+// this, so bumping it scales the whole type ramp rather than body copy alone.
+$font-size-base: 1.5rem;
+
 @import "bootstrap/scss/bootstrap";
 
 // The category filter's label grows with the name of the chosen category, and
