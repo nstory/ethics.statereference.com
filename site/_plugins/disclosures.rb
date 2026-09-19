@@ -4,7 +4,8 @@ require "json"
 # etl/output/pdfs.jsonl.  The record is available to the layout as
 # page.disclosure (not merged into the page, since `name` and `title` clash
 # with Jekyll's own page attributes), and the PDF itself in the R2 bucket as
-# page.pdf_url.
+# page.pdf_url.  The number of pages generated is left in
+# site.data.disclosure_count for the homepage to report.
 module Disclosures
   class Generator < Jekyll::Generator
     safe true
@@ -12,6 +13,7 @@ module Disclosures
     def generate(site)
       path = File.expand_path("../etl/output/pdfs.jsonl", site.source)
       files_url = site.config["files_url"].to_s.chomp("/")
+      count = 0
       File.foreach(path) do |line|
         disclosure = JSON.parse(line)
         slug = File.basename(disclosure["filename"], ".pdf")
@@ -25,7 +27,9 @@ module Disclosures
           "pdf_url" => "#{files_url}/disclosures/#{disclosure["filename"]}"
         )
         site.pages << page
+        count += 1
       end
+      site.data["disclosure_count"] = count
     end
   end
 end

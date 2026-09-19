@@ -6,7 +6,7 @@ layout: default
 <div class="bg-light py-5">
   <div class="container">
     <h1 class="display-1">Ethics Disclosures Database</h1>
-    <p class="lead">The <i>StateReference Ethics</i> database contains X,XXX conflict of interest disclosures filed by Massachusetts officials.</p>
+    <p class="lead">The <i>StateReference Ethics</i> database contains {{ site.data.disclosure_count | delimit }} conflict of interest disclosures filed by Massachusetts officials.</p>
     {% include search-form.html classes="d-flex" categories=true %}
   </div>
 </div>
