@@ -19,3 +19,16 @@ $font-size-base: 1.5rem;
     max-width: none;
   }
 }
+
+// The search button.  Bootstrap's own `btn-dark` is $gray-900, not black, and
+// black is the one colour the theme's palette doesn't offer -- so build the
+// variant rather than override `dark` and repaint anything else that uses it.
+// Hover/active lighten instead of darkening: black has nothing left to shade
+// to, so the usual direction would give no feedback at all.
+.btn-black {
+  @include button-variant(
+    $black, $black, $white,
+    $gray-800, $gray-800, $white,
+    $gray-700, $gray-700, $white
+  );
+}
