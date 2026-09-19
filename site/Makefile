@@ -4,7 +4,7 @@
 JEKYLL ?= bundle exec jekyll
 PAGEFIND ?= node_modules/.bin/pagefind
 
-.PHONY: all build index serve clean
+.PHONY: all build index reindex serve clean
 
 all: build
 
@@ -14,8 +14,13 @@ index:
 	$(JEKYLL) build
 	$(PAGEFIND) --site _site
 
-# Watching would regenerate _site and delete the index underneath us, so the
-# server runs against the build made above.  Re-run `make serve` after edits.
+# _config.yml's keep_files holds onto _site/pagefind across the regenerations
+# watching does, so edits leave search working against the index built above.
+# That index goes stale as pages change; `make reindex` refreshes it in place,
+# from another shell, without stopping the server.
+reindex:
+	$(PAGEFIND) --site _site
+
 serve: build
 	$(JEKYLL) serve --skip-initial-build --watch
 
