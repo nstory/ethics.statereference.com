@@ -9,12 +9,13 @@ R2_BUCKET ?= ethics-files
 DROPS  := $(wildcard $(DROP_DIR)/*.zip)
 STAMPS := $(patsubst $(DROP_DIR)/%.zip,$(PDF_DIR)/%/.extracted,$(DROPS))
 
-.PHONY: all clean r2-sync r2-sync-dry-run pdfs pdfs-clean $(OUTPUT_DIR)/pdfs.jsonl disclosure-pdfs disclosure-pdfs-clean ocr ocr-model ocr-status ocr-clean ocr-model-clean
+.PHONY: all clean r2-sync r2-sync-dry-run pdfs pdfs-clean $(OUTPUT_DIR)/pdfs.jsonl metadata disclosure-pdfs disclosure-pdfs-clean ocr ocr-model ocr-status ocr-clean ocr-model-clean
 
 # Everything: extract, OCR, then build the output.  The output is made by a
 # sub-make so it runs after OCR even under -j.
 all: ocr
 	$(MAKE) $(OUTPUT_DIR)/pdfs.jsonl
+	$(MAKE) $(OUTPUT_DIR)/metadata.json
 	$(MAKE) disclosure-pdfs
 
 # extract every drop in $(DROP_DIR) into $(PDF_DIR)/<drop>/
@@ -52,6 +53,12 @@ ocr-status:
 # because make can't track the OCR files it reads (their names have spaces).
 $(OUTPUT_DIR)/pdfs.jsonl: pdfs
 	ruby lib/pdfs_jsonl.rb --pdf-dir $(PDF_DIR) --ocr-dir $(OCR_DIR) --output $@
+
+# corpus-wide metadata for the site (the drops and their dates); see README.md
+$(OUTPUT_DIR)/metadata.json: $(DROPS)
+	ruby lib/metadata_json.rb --drop-dir $(DROP_DIR) --output $@
+
+metadata: $(OUTPUT_DIR)/metadata.json
 
 # hard link every PDF in pdfs.jsonl to $(OUTPUT_DIR)/pdfs/disclosures/<filename>,
 # the directory synced to R2.  Uses the existing pdfs.jsonl; doesn't rebuild it.

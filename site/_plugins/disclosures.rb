@@ -6,6 +6,10 @@ require "json"
 # with Jekyll's own page attributes), and the PDF itself in the R2 bucket as
 # page.pdf_url.  The number of pages generated is left in
 # site.data.disclosure_count for the homepage to report.
+#
+# The drops the corpus was built from, read from etl/output/metadata.json, are
+# left in site.data.disclosure_drops -- oldest first, each with `filename` and
+# `date`.
 module Disclosures
   class Generator < Jekyll::Generator
     safe true
@@ -30,6 +34,9 @@ module Disclosures
         count += 1
       end
       site.data["disclosure_count"] = count
+
+      metadata = JSON.parse(File.read(File.expand_path("../etl/output/metadata.json", site.source)))
+      site.data["disclosure_drops"] = metadata["drops"]
     end
   end
 end

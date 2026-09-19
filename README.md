@@ -16,8 +16,15 @@ Almost all of the code in this repo was written by [Claude Code](https://claude.
 | etl/input/ocr/xxx/yyy | chandra ocr of pdfs/xxx/yyy.pdf |
 | etl/models/chandra-mlx-4bit | chandra quantized for MLX; built by `make ocr-model` |
 | etl/output/pdfs.jsonl | pdf metadata for ingestion by site |
+| etl/output/metadata.json | corpus-wide metadata for ingestion by site |
 | etl/output/pdfs/disclosures/xxx.pdf | hard link to each PDF named for upload to R2 |
 | site/ | jekyll site for ethics.stateference.com |
+
+## metadata.json
+Metadata about the corpus as a whole, as opposed to `pdfs.jsonl`'s line per PDF. A single JSON object with these fields:
+- `drops` array with one entry per drop in `etl/input/drops`, oldest first, each an object with:
+  - `filename` name of the drop's zip, e.g. `2025-08-07-sec.zip`
+  - `date` date the drop was received, parsed from `filename`, e.g. `2025-08-07`
 
 ## pdfs.jsonl
 One line per PDF, each line is a JSON object with these fields:
