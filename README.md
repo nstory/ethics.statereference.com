@@ -15,6 +15,7 @@ Almost all of the code in this repo was written by [Claude Code](https://claude.
 | etl/input/pdfs/xxx | extracted files from drop xxx |
 | etl/input/ocr/xxx/yyy | chandra ocr of pdfs/xxx/yyy.pdf |
 | etl/models/chandra-mlx-4bit | chandra quantized for MLX; built by `make ocr-model` |
+| etl/metadata.yml | hand-maintained metadata for each drop |
 | etl/output/pdfs.jsonl | pdf metadata for ingestion by site |
 | etl/output/metadata.json | corpus-wide metadata for ingestion by site |
 | etl/output/pdfs/disclosures/xxx.pdf | hard link to each PDF named for upload to R2 |
@@ -25,6 +26,18 @@ Metadata about the corpus as a whole, as opposed to `pdfs.jsonl`'s line per PDF.
 - `drops` array with one entry per drop in `etl/input/drops`, oldest first, each an object with:
   - `filename` name of the drop's zip, e.g. `2025-08-07-sec.zip`
   - `date` date the drop was received, parsed from `filename`, e.g. `2025-08-07`
+  - `custodian` agency the drop came from, e.g. `State Ethics Commission`
+  - `url` where the drop was published, if it was; absent otherwise
+  - `notes` what's in the drop, if it needs saying; absent otherwise
+
+## metadata.yml
+Everything about a drop that isn't in its name, one entry per zip in `etl/input/drops`, keyed by the zip's filename. Every drop needs an entry and every entry needs a drop; otherwise `make metadata` fails. Each entry's fields are copied into that drop's `metadata.json` object as they are, so a new field needs no code:
+```yaml
+2025-08-07-sec.zip:
+  custodian: State Ethics Commission
+  url: https://example.com/where-it-was-published
+  notes: All disclosures June 2025 to present.
+```
 
 ## pdfs.jsonl
 One line per PDF, each line is a JSON object with these fields:

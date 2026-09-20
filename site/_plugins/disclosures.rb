@@ -8,8 +8,8 @@ require "json"
 # site.data.disclosure_count for the homepage to report.
 #
 # The drops the corpus was built from, read from etl/output/metadata.json, are
-# left in site.data.disclosure_drops -- oldest first, each with `filename` and
-# `date`.
+# left in site.data.disclosure_drops -- oldest first, with whatever fields
+# metadata.json gives them.
 module Disclosures
   class Generator < Jekyll::Generator
     safe true

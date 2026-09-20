@@ -54,9 +54,10 @@ ocr-status:
 $(OUTPUT_DIR)/pdfs.jsonl: pdfs
 	ruby lib/pdfs_jsonl.rb --pdf-dir $(PDF_DIR) --ocr-dir $(OCR_DIR) --output $@
 
-# corpus-wide metadata for the site (the drops and their dates); see README.md
-$(OUTPUT_DIR)/metadata.json: $(DROPS)
-	ruby lib/metadata_json.rb --drop-dir $(DROP_DIR) --output $@
+# corpus-wide metadata for the site (the drops and what we know about them);
+# see README.md
+$(OUTPUT_DIR)/metadata.json: $(DROPS) metadata.yml
+	ruby lib/metadata_json.rb --drop-dir $(DROP_DIR) --metadata metadata.yml --output $@
 
 metadata: $(OUTPUT_DIR)/metadata.json
 
