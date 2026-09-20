@@ -16,6 +16,25 @@ layout: default
   <p>The <a href="https://www.mass.gov/info-details/gl-c-268a-the-conflict-of-interest-law-as-amended-by-c-248-acts-of-2024">Massachusetts Conflict of Interest Law (G.L. c. 268A)</a> requires that public employees file certain disclosures when a conflict of interest could be present. Examples include: being reimbursed for travel expenses, having a financial interest related to your position, or otherwise having the appearance of a conflict of interest.</p>
   <p>The conflict of interest law is administered by the <a href="https://www.mass.gov/orgs/state-ethics-commission">State Ethics Commission</a>. The commission is the custodian for <a href="https://www.mass.gov/info-details/conflict-of-interest-law-disclosures-filed-with-the-state-ethics-commission">disclosures directly filed with the commission</a>, however, the vast majority of state employees file their disclosures with their appointing authorities.</p>
   <p>The goal of this database is to collect these disclosures in a single place and make them searchable.</p>
+
+  <h2 class="display-2">Data files</h2>
+  <table class="table table-striped w-auto">
+    <thead>
+      <tr>
+        <th scope="col">Received</th>
+        <th scope="col">File</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%- assign drops = site.data.disclosure_drops | sort: "date" | reverse -%}
+      {%- for drop in drops %}
+      <tr>
+        <td>{{ drop.date | date: "%B %-d, %Y" }}</td>
+        <td><code>{{ drop.filename }}</code></td>
+      </tr>
+      {%- endfor %}
+    </tbody>
+  </table>
 </div>
 
 <script type="module" src="{{ '/assets/js/search.js' | relative_url }}"></script>
