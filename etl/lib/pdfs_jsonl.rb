@@ -24,6 +24,9 @@
 # category is Category::SFI, their `date` is the drop's `year` (date_source
 # "drop"), the rest is null, and their fulltext has the form's boilerplate
 # stripped (see boilerplate.rb).
+#
+# A drop's `agency` in metadata.yml, for drops where every filer is from the
+# same agency, is every one of its PDFs' `agency`, in place of any parsed one.
 
 require "cgi"
 require "digest"
@@ -52,7 +55,7 @@ OptionParser.new do |o|
   o.on("--ocr-dir DIR") { |v| opts[:ocr_dir] = v }
   o.on("--output FILE") { |v| opts[:output] = v }
   o.on("--exclusions FILE") { |v| opts[:exclusions] = v }
-  o.on("--metadata FILE", "drop metadata, for each drop's kind, custodian and year") { |v| opts[:metadata] = v }
+  o.on("--metadata FILE", "drop metadata, for each drop's kind, custodian, year and agency") { |v| opts[:metadata] = v }
 end.parse!
 
 PDF_DIR = File.expand_path(opts[:pdf_dir])
@@ -225,7 +228,7 @@ lines = Parallel.map(docs.to_a) do |sha, doc|
     fulltext: fields[:fulltext],
     name: fields[:name],
     title: fields[:title],
-    agency: fields[:agency],
+    agency: DROPS.dig(doc[:drop], "agency") || fields[:agency],
   )
 end
 File.open(tmp, "w") { |f| f.puts(lines) }

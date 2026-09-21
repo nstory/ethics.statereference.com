@@ -16,6 +16,7 @@
 2026-04-09-sfi-boston.zip:
   custodian: City of Boston
   kind: sfi
+  agency: City of Boston
   year: 2024
   notes: 2024 Statements of Financial Interests filed with the City of Boston, 102 filers.
   url: https://blog.nathanielstory.com/blog/boston-sfis/

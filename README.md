@@ -65,4 +65,5 @@ One line per PDF, each line is a JSON object with these fields:
   `name`, `title` and `agency` are taken from the first form in the PDF and not cleaned up, so the same person or agency can appear with different spellings, capitalization or OCR errors. SFIs aren't parsed, so these three are always `null` for them, and an SFI's `date` is its drop's `year`, with `date_source` `drop`
 
   ## TODO
-  - [ ] sidebar on SERP, allow filtering by type
+  - [ ] sidebar on SERP, allow filtering by category
+  - [ ] parse agency, name from SEC SFIs

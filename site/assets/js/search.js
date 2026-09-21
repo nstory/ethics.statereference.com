@@ -163,11 +163,8 @@ function resultItem(result, excerpting) {
   li.append(heading);
 
   // The heading is the filename, so this line is the only place the filer's
-  // name appears.  The date leads, so a column of results scans by date.  Only
-  // SFIs carry a custodian (see _layouts/disclosure.html), and they have no
-  // filer fields, so theirs read "2024 · Statement of Financial Interests ·
-  // City of Boston".
-  const details = [formatDate(meta.date), meta.name, meta.category, meta.position, meta.agency, meta.custodian].filter(Boolean);
+  // name appears.  The date leads, so a column of results scans by date.
+  const details = [formatDate(meta.date), meta.name, meta.category, meta.position, meta.agency].filter(Boolean);
   if (details.length) {
     const line = document.createElement("p");
     line.className = `small text-body-secondary ${excerpting ? "mb-1" : "mb-0"}`;
