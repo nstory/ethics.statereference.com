@@ -64,10 +64,12 @@ MIN_PAGE_CHARS = 10
 # basenames collide (91 of them in 2025-08-07-sec alone).
 Job = Struct.new(:pdf, :dest_dir, :stem, keyword_init: true)
 
-# Done means either kind of output exists and is newer than the PDF.
-def stale?(pdf, dest_dir, stem)
-  outputs = %w[md txt].map { |ext| File.join(dest_dir, "#{stem}.#{ext}") }.select { |f| File.exist?(f) }
-  outputs.none? { |f| File.mtime(f) >= File.mtime(pdf) }
+# Done means either kind of output exists.  Timestamps aren't compared: zips
+# store local times with no zone, so a drop can extract PDFs dated hours in
+# the future, and re-extracting a drop resets them anyway -- either way
+# finished work would look stale.  To redo a PDF, delete its output.
+def done?(dest_dir, stem)
+  %w[md txt].any? { |ext| File.exist?(File.join(dest_dir, "#{stem}.#{ext}")) }
 end
 
 def sfi?(job)
@@ -107,7 +109,7 @@ pdfs.each do |pdf|
   rel = pdf.delete_prefix("#{PDF_DIR}/")
   dest_dir = File.join(OCR_DIR, rel.delete_suffix(File.extname(rel)))
   stem = File.basename(pdf, ".*")
-  next unless stale?(pdf, dest_dir, stem)
+  next if done?(dest_dir, stem)
 
   jobs << Job.new(pdf: pdf, dest_dir: dest_dir, stem: stem)
 end
@@ -164,7 +166,7 @@ end
 
 # ocr_mlx.py writes each document as it finishes and reports its own failures,
 # so a non-zero exit still leaves completed work on disk.  Anything missing
-# stays stale and gets retried on the next run.
+# stays pending and gets retried on the next run.
 unless ok
   warn "ocr_mlx.py exited non-zero; completed documents were still written"
   exit 1

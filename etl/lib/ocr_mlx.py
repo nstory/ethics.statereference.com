@@ -7,8 +7,8 @@
 #
 # Reads a JSON manifest of {pdf, dest_dir, stem} jobs and writes chandra's usual
 # three outputs (<stem>.md, <stem>.html, <stem>_metadata.json) into each job's
-# dest_dir.  ocr.rb decides what's stale and builds the manifest; this script
-# just does the inference.
+# dest_dir.  ocr.rb decides what still needs doing and builds the manifest;
+# this script just does the inference.
 #
 # chandra's own CLI batches pages within a single document, which is no help
 # here: the corpus averages 3.5 pages per PDF, so a batch of 8 would almost
@@ -57,8 +57,8 @@ def save_document(dest_dir: Path, stem: str, results: list, save_images: bool) -
             for img_name, pil_image in r.images.items():
                 pil_image.save(dest_dir / img_name)
 
-    # Write the markdown last: ocr.rb treats an existing .md newer than the PDF
-    # as "done", so it must not appear until its siblings are on disk.
+    # Write the markdown last: ocr.rb treats an existing .md as "done", so it
+    # must not appear until its siblings are on disk.
     (dest_dir / f"{stem}.html").write_text(html, encoding="utf-8")
     (dest_dir / f"{stem}_metadata.json").write_text(
         json.dumps(metadata, indent=2), encoding="utf-8"
@@ -103,7 +103,7 @@ def main() -> int:
 
         # One malformed page shouldn't end a run that has hours of work behind
         # it, so a failed batch only costs the documents it touched.  They keep
-        # no output, stay stale, and come back on the next invocation.
+        # no output, stay pending, and come back on the next invocation.
         try:
             results = manager.generate(batch, max_output_tokens=args.max_output_tokens)
         except Exception as exc:  # noqa: BLE001
