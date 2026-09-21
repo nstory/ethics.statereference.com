@@ -7,16 +7,21 @@
 # The drops repeat documents -- the same file shows up under different names,
 # years and drops -- so we key on the hash and collect every basename.  The
 # fulltext and original_path come from the first copy (in path order) that has
-# been OCRed.  PDFs with no OCR yet are skipped with a warning; rerun after
-# `make ocr`.
+# text, either chandra's <stem>.md or pdftotext's <stem>.txt (see ocr.rb).
+# PDFs with neither yet are skipped with a warning; rerun after `make ocr`.
 #
 # PDFs whose sha256 is listed in exclusions.yml are left out entirely.
 #
 # Each line also gets a unique `filename`: the longest original name, normalized,
 # e.g. "Smith_John_disclosure_9_12_25.pdf".  Where different PDFs normalize to
-# the same name, later ones (in path order) get _1, _2, ... appended.  See
-# category.rb for the `category` field, filing.rb for `date` and `date_source`,
-# and filer.rb for `name`, `title` and `agency`.
+# the same name, later ones (in path order) get _1, _2, ... appended.
+#
+# `kind` and `custodian` come from metadata.yml, by the drop of original_path.
+# Disclosures get category.rb's `category`, filing.rb's `date` and
+# `date_source`, and filer.rb's `name`, `title` and `agency`.  SFIs get none
+# of that: they come in many formats and we don't parse any of them, so their
+# `date` is the drop's `year` (date_source "drop"), the rest is null, and
+# their fulltext has the form's boilerplate stripped (see boilerplate.rb).
 
 require "cgi"
 require "digest"
@@ -25,7 +30,9 @@ require "json"
 require "optparse"
 require "parallel"
 require "yaml"
+require_relative "boilerplate"
 require_relative "category"
+require_relative "drops"
 require_relative "filer"
 require_relative "filing"
 
@@ -34,6 +41,7 @@ opts = {
   ocr_dir: "input/ocr",
   output: "output/pdfs.jsonl",
   exclusions: "exclusions.yml",
+  metadata: "metadata.yml",
 }
 
 OptionParser.new do |o|
@@ -42,16 +50,20 @@ OptionParser.new do |o|
   o.on("--ocr-dir DIR") { |v| opts[:ocr_dir] = v }
   o.on("--output FILE") { |v| opts[:output] = v }
   o.on("--exclusions FILE") { |v| opts[:exclusions] = v }
+  o.on("--metadata FILE", "drop metadata, for each drop's kind, custodian and year") { |v| opts[:metadata] = v }
 end.parse!
 
 PDF_DIR = File.expand_path(opts[:pdf_dir])
 OCR_DIR = File.expand_path(opts[:ocr_dir])
 EXCLUSIONS = YAML.load_file(opts[:exclusions]).to_set
+DROPS = Drops.load(opts[:metadata])
 
-# Same layout ocr.rb writes: <pdf_dir>/<drop>/<rel>.pdf -> <ocr_dir>/<drop>/<rel>/<stem>.md
-def ocr_markdown_path(pdf)
+# Same layout ocr.rb writes: <pdf_dir>/<drop>/<rel>.pdf -> <ocr_dir>/<drop>/<rel>/<stem>.{md,txt}.
+# ocr.rb writes one or the other, never both.
+def ocr_text_path(pdf)
   rel = pdf.delete_prefix("#{PDF_DIR}/")
-  File.join(OCR_DIR, rel.delete_suffix(File.extname(rel)), "#{File.basename(pdf, ".*")}.md")
+  base = File.join(OCR_DIR, rel.delete_suffix(File.extname(rel)), File.basename(pdf, ".*"))
+  %w[md txt].map { |ext| "#{base}.#{ext}" }.find { |f| File.exist?(f) }
 end
 
 BLOCK_TAGS = /<\/?(?:p|br|div|tr|table|thead|tbody|h\d|li|ul|ol)\b[^>]*>/i
@@ -77,10 +89,22 @@ def plain_text(markdown)
     .gsub(/\\?\*{2,}/, "")             # unmatched bold markers
     .gsub(/!\[[^\]]*\]\([^)]*\)/, " ")  # images
     .gsub(/\[([^\]]*)\]\([^)]*\)/, '\1') # links
+  squeeze_whitespace(text)
+end
+
+def squeeze_whitespace(text)
   text.lines.map { |l| l.gsub(/[ \t ]+/, " ").strip }
     .join("\n")
     .gsub(/\n{3,}/, "\n\n")
     .strip
+end
+
+# pdftotext's output is already plain text -- running it through plain_text
+# would eat anything in it that looks like markup -- so it only needs the
+# column padding from -layout squeezed out.
+def fulltext_of(path)
+  text = File.read(path, encoding: "UTF-8")
+  path.end_with?(".md") ? plain_text(text) : squeeze_whitespace(text)
 end
 
 # The longest original name, reduced to ASCII letters, digits, "_" and "-" so
@@ -98,7 +122,7 @@ end
 
 pdfs = Dir.glob(File.join(PDF_DIR, "*", "**", "*.pdf"), File::FNM_CASEFOLD).sort
 
-docs = {} # sha256 => { filenames:, markdown: }
+docs = {} # sha256 => { filenames:, text:, path: }
 missing = []
 excluded = 0
 
@@ -109,15 +133,14 @@ pdfs.zip(shas).each do |pdf, sha|
     next
   end
 
-  doc = docs[sha] ||= { filenames: [], markdown: nil }
+  doc = docs[sha] ||= { filenames: [], text: nil }
   name = File.basename(pdf)
   doc[:filenames] << name unless doc[:filenames].include?(name)
 
-  next if doc[:markdown]
+  next if doc[:text]
 
-  md = ocr_markdown_path(pdf)
-  if File.exist?(md)
-    doc[:markdown] = md
+  if (text = ocr_text_path(pdf))
+    doc[:text] = text
     doc[:path] = pdf.delete_prefix("#{PDF_DIR}/")
   else
     missing << [pdf, sha]
@@ -125,7 +148,7 @@ pdfs.zip(shas).each do |pdf, sha|
 end
 
 # a later copy of the same document may have been OCRed
-missing = missing.filter_map { |pdf, sha| pdf unless docs[sha][:markdown] }
+missing = missing.filter_map { |pdf, sha| pdf unless docs[sha][:text] }
 unless missing.empty?
   warn "skipping #{missing.size} PDF(s) with no OCR output (run `make ocr`):"
   missing.each { |pdf| warn "  #{pdf.delete_prefix("#{PDF_DIR}/")}" }
@@ -143,26 +166,70 @@ docs.each_value do |doc|
   doc[:filename] = filename
 end
 
-FileUtils.mkdir_p(File.dirname(opts[:output]))
-tmp = "#{opts[:output]}.tmp"
+distinct = docs.size
+docs.select! { |_, doc| doc[:text] }
+docs.each_value do |doc|
+  doc[:drop] = doc[:path].split("/").first
+  doc[:kind] = Drops.kind(DROPS[doc[:drop]])
+end
+
 # The text cleanup and regex matching are CPU-bound, so spread them across
 # processes (threads would just queue up behind the GVL).  Parallel.map keeps
-# the input order.
-lines = Parallel.map(docs.select { |_, doc| doc[:markdown] }) do |sha, doc|
-  fulltext = plain_text(File.read(doc[:markdown], encoding: "UTF-8"))
-  JSON.generate(
-    filename: doc[:filename],
+# the input order.  The fulltexts are read in a pass of their own because
+# stripping an SFI's boilerplate takes every other SFI in its drop.
+fulltexts = Parallel.map(docs.values) { |doc| fulltext_of(doc[:text]) }
+docs.each_value.zip(fulltexts) { |doc, fulltext| doc[:fulltext] = fulltext }
+
+boilerplate = docs.each_value
+  .select { |doc| doc[:kind] == Drops::SFI }
+  .group_by { |doc| doc[:drop] }
+  .transform_values { |ds| Boilerplate.common_lines(ds.map { |d| d[:fulltext] }) }
+
+def disclosure_fields(doc)
+  fulltext = doc[:fulltext]
+  {
     category: Category.of(fulltext),
     **Filing.of(doc[:filenames], doc[:path], fulltext),
+    fulltext: fulltext,
+    **Filer.of(fulltext).slice(:name, :title, :agency),
+  }
+end
+
+def sfi_fields(doc, boilerplate)
+  {
+    category: nil,
+    date: DROPS.dig(doc[:drop], "year")&.to_s,
+    date_source: "drop",
+    fulltext: Boilerplate.strip(doc[:fulltext], boilerplate),
+    name: nil,
+    title: nil,
+    agency: nil,
+  }
+end
+
+FileUtils.mkdir_p(File.dirname(opts[:output]))
+tmp = "#{opts[:output]}.tmp"
+lines = Parallel.map(docs.to_a) do |sha, doc|
+  fields = doc[:kind] == Drops::SFI ? sfi_fields(doc, boilerplate[doc[:drop]]) : disclosure_fields(doc)
+  JSON.generate(
+    filename: doc[:filename],
+    kind: doc[:kind],
+    custodian: DROPS.dig(doc[:drop], "custodian"),
+    category: fields[:category],
+    date: fields[:date],
+    date_source: fields[:date_source],
     original_filenames: doc[:filenames],
     original_path: doc[:path],
     sha256sum: sha,
-    fulltext: fulltext,
-    **Filer.of(fulltext).slice(:name, :title, :agency),
+    fulltext: fields[:fulltext],
+    name: fields[:name],
+    title: fields[:title],
+    agency: fields[:agency],
   )
 end
 File.open(tmp, "w") { |f| f.puts(lines) }
-written = lines.size
 File.rename(tmp, opts[:output])
 
-puts "#{pdfs.size} PDF(s), #{excluded} excluded, #{docs.size} distinct, #{written} written to #{opts[:output]}"
+counts = docs.each_value.map { |doc| doc[:kind] }.tally.map { |kind, n| "#{n} #{kind}" }.join(", ")
+puts "#{pdfs.size} PDF(s), #{excluded} excluded, #{distinct} distinct, " \
+     "#{lines.size} written to #{opts[:output]} (#{counts})"

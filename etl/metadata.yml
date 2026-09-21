@@ -2,7 +2,19 @@
   custodian: State Ethics Commission
   notes: All disclosures 2012 to June 2025.
 
+2025-08-09-sfi-sec.zip:
+  custodian: State Ethics Commission
+  kind: sfi
+  year: 2024
+  notes: All 2024 Statements of Financial Interests filed with the State Ethics Commission, 4,019 filers.
+
 2026-04-09-sec.zip:
   custodian: State Ethics Commission
   url: https://blog.nathanielstory.com/blog/ethics-disclosures/
   notes: All disclosures June 2025 to March 2026.
+
+2026-04-09-sfi-boston.zip:
+  custodian: City of Boston
+  kind: sfi
+  year: 2024
+  notes: 2024 Statements of Financial Interests filed with the City of Boston, 102 filers.

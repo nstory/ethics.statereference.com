@@ -52,7 +52,7 @@ ocr-status:
 # one line per distinct PDF with its OCR fulltext; see README.md.  Phony
 # because make can't track the OCR files it reads (their names have spaces).
 $(OUTPUT_DIR)/pdfs.jsonl: pdfs
-	ruby lib/pdfs_jsonl.rb --pdf-dir $(PDF_DIR) --ocr-dir $(OCR_DIR) --output $@
+	ruby lib/pdfs_jsonl.rb --pdf-dir $(PDF_DIR) --ocr-dir $(OCR_DIR) --metadata metadata.yml --output $@
 
 # corpus-wide metadata for the site (the drops and what we know about them);
 # see README.md
