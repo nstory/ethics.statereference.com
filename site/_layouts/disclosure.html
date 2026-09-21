@@ -41,9 +41,18 @@ layout: default
   twelve is a bare year, and Pagefind compares a sort key as text unless every
   value is numeric -- so the short ones sort to the edge of their year rather
   than out of it, which is as good as the date we have.
+
+  The custodian only goes in for SFIs.  They have no filer fields, so it's what
+  tells one drop's apart from another's; every disclosure so far comes from the
+  State Ethics Commission, where it would just repeat on every result.
 {%- endcomment -%}
+{%- if page.disclosure.category == "Statement of Financial Interests" -%}
+  {%- assign custodian = page.disclosure.custodian -%}
+{%- else -%}
+  {%- assign custodian = "" -%}
+{%- endif %}
 <div hidden data-pagefind-body>
-  <span data-pagefind-meta="title[data-title], name[data-name], position[data-position], agency[data-agency], filename[data-filename], category[data-category], year[data-year]"
+  <span data-pagefind-meta="title[data-title], name[data-name], position[data-position], agency[data-agency], filename[data-filename], category[data-category], custodian[data-custodian], year[data-year]"
         data-pagefind-filter="category[data-category]"
         data-pagefind-sort="date[data-date]"
         data-title="{{ page.title | escape }}"
@@ -52,5 +61,6 @@ layout: default
         data-agency="{{ page.disclosure.agency | escape }}"
         data-filename="{{ page.disclosure.filename | escape }}"
         data-category="{{ page.disclosure.category | escape }}"
+        data-custodian="{{ custodian | escape }}"
         data-date="{{ page.disclosure.date }}"
         data-year="{{ page.disclosure.date | slice: 0, 4 }}"></span>{{ page.disclosure.fulltext | escape }}</div>

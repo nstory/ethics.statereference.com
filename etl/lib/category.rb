@@ -12,6 +12,8 @@ module Category
   TRAVEL_AND_GIFTS = "Travel & Gifts"
   APPEARANCE_OF_CONFLICT = "Appearance of Conflict"
   OTHER = "Other"
+  # Not read from the text: every PDF in an SFI drop is one (see pdfs_jsonl.rb).
+  SFI = "Statement of Financial Interests"
 
   # Checked in order; "FINANCIAL INTEREST" is last because it also appears in
   # some titles that belong elsewhere.

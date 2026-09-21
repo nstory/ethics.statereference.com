@@ -16,12 +16,14 @@
 # e.g. "Smith_John_disclosure_9_12_25.pdf".  Where different PDFs normalize to
 # the same name, later ones (in path order) get _1, _2, ... appended.
 #
-# `kind` and `custodian` come from metadata.yml, by the drop of original_path.
+# `custodian` comes from metadata.yml, by the drop of original_path, and so
+# does whether the PDF is a disclosure or an SFI (the drop's `kind`).
 # Disclosures get category.rb's `category`, filing.rb's `date` and
 # `date_source`, and filer.rb's `name`, `title` and `agency`.  SFIs get none
 # of that: they come in many formats and we don't parse any of them, so their
-# `date` is the drop's `year` (date_source "drop"), the rest is null, and
-# their fulltext has the form's boilerplate stripped (see boilerplate.rb).
+# category is Category::SFI, their `date` is the drop's `year` (date_source
+# "drop"), the rest is null, and their fulltext has the form's boilerplate
+# stripped (see boilerplate.rb).
 
 require "cgi"
 require "digest"
@@ -197,7 +199,7 @@ end
 
 def sfi_fields(doc, boilerplate)
   {
-    category: nil,
+    category: Category::SFI,
     date: DROPS.dig(doc[:drop], "year")&.to_s,
     date_source: "drop",
     fulltext: Boilerplate.strip(doc[:fulltext], boilerplate),
@@ -213,7 +215,6 @@ lines = Parallel.map(docs.to_a) do |sha, doc|
   fields = doc[:kind] == Drops::SFI ? sfi_fields(doc, boilerplate[doc[:drop]]) : disclosure_fields(doc)
   JSON.generate(
     filename: doc[:filename],
-    kind: doc[:kind],
     custodian: DROPS.dig(doc[:drop], "custodian"),
     category: fields[:category],
     date: fields[:date],

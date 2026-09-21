@@ -151,8 +151,10 @@ function resultItem(result, excerpting) {
 
   // The heading is the filename, so this line is the only place the filer's
   // name appears.  The year leads because it's the one fixed-width field, which
-  // makes a column of results easy to scan by date.
-  const details = [meta.year, meta.name, meta.category, meta.position, meta.agency].filter(Boolean);
+  // makes a column of results easy to scan by date.  Only SFIs carry a
+  // custodian (see _layouts/disclosure.html), and they have no filer fields, so
+  // theirs read "2024 · Statement of Financial Interests · City of Boston".
+  const details = [meta.year, meta.name, meta.category, meta.position, meta.agency, meta.custodian].filter(Boolean);
   if (details.length) {
     const line = document.createElement("p");
     line.className = `small text-body-secondary ${excerpting ? "mb-1" : "mb-0"}`;
