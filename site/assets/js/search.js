@@ -133,6 +133,19 @@ function pageNumbers(current, total) {
   return out;
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// "2026", "Jan 2026", "Jan 4, 2026" -- as much of the date as we have, which
+// can be any of the three (see etl/lib/filing.rb).  Split by hand rather than
+// through Date, which reads "2026-01-04" as UTC midnight and so shows it as
+// Jan 3 anywhere west of Greenwich.
+function formatDate(iso) {
+  const [year, month, day] = (iso ?? "").split("-");
+  if (!month) return year;
+  const mon = MONTHS[Number(month) - 1];
+  return day ? `${mon} ${Number(day)}, ${year}` : `${mon} ${year}`;
+}
+
 // `excerpting` is off when there's no query: Pagefind falls back to the start of
 // the page, which on these is the form's printed title, so every row would carry
 // the same sentence.  The details line is what distinguishes them.
@@ -150,11 +163,11 @@ function resultItem(result, excerpting) {
   li.append(heading);
 
   // The heading is the filename, so this line is the only place the filer's
-  // name appears.  The year leads because it's the one fixed-width field, which
-  // makes a column of results easy to scan by date.  Only SFIs carry a
-  // custodian (see _layouts/disclosure.html), and they have no filer fields, so
-  // theirs read "2024 · Statement of Financial Interests · City of Boston".
-  const details = [meta.year, meta.name, meta.category, meta.position, meta.agency, meta.custodian].filter(Boolean);
+  // name appears.  The date leads, so a column of results scans by date.  Only
+  // SFIs carry a custodian (see _layouts/disclosure.html), and they have no
+  // filer fields, so theirs read "2024 · Statement of Financial Interests ·
+  // City of Boston".
+  const details = [formatDate(meta.date), meta.name, meta.category, meta.position, meta.agency, meta.custodian].filter(Boolean);
   if (details.length) {
     const line = document.createElement("p");
     line.className = `small text-body-secondary ${excerpting ? "mb-1" : "mb-0"}`;
