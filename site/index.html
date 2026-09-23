@@ -6,27 +6,31 @@ layout: default
 <div class="bg-light py-5">
   <div class="container">
     <h1 class="">Ethics Disclosures Database</h1>
-    <p class="lead">The <i>StateReference Ethics</i> database contains {{ site.data.disclosure_count | delimit }} conflict of interest disclosures filed by Massachusetts public employees.</p>
+    <p class="lead">The <i>StateReference Ethics</i> database contains {{ site.data.disclosure_count | delimit }} conflict of interest disclosures and statements of financial interests filed by Massachusetts public employees.</p>
     {% include search-form.html classes="d-flex" categories=true %}
   </div>
 </div>
 
 <div class="container">
-  <h2 class="">What is a conflict of interest disclosure?</h2>
-  <p>The <a href="https://www.mass.gov/info-details/gl-c-268a-the-conflict-of-interest-law-as-amended-by-c-248-acts-of-2024">Massachusetts Conflict of Interest Law (G.L. c. 268A)</a> requires that public employees file certain disclosures when a conflict of interest could be present. Examples include: travel being reimbursed by a foreign entity, having a financial interest related to your position, or otherwise having the appearance of a conflict of interest.</p>
-  <p>The conflict of interest law is administered and enforced by the <a href="https://www.mass.gov/orgs/state-ethics-commission">State Ethics Commission</a>. The commission is the custodian for <a href="https://www.mass.gov/info-details/conflict-of-interest-law-disclosures-filed-with-the-state-ethics-commission">disclosures directly filed with the commission</a>, however, the vast majority of state employees file their disclosures with their appointing authorities.</p>
-
-  <h2 class="">What is this database?</h2>
-  <p><strong>StateReference Ethics</strong> is a compilation of these disclosures made into a searchable database.</p>
-  <p>We submit public records requests to agencies for the disclosures filed with them. We then OCR the documents and upload them here.</p>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="">What is a conflict of interest disclosure?</h2>
+      <p>The <a href="https://www.mass.gov/info-details/gl-c-268a-the-conflict-of-interest-law-as-amended-by-c-248-acts-of-2024">Massachusetts Conflict of Interest Law (G.L. c. 268A)</a> requires that public employees file certain disclosures when a conflict of interest could be present. Examples include: travel being reimbursed by a foreign entity, having a financial interest related to your position, or otherwise having the appearance of a conflict of interest.</p>
+      <p>The conflict of interest law is administered and enforced by the <a href="https://www.mass.gov/orgs/state-ethics-commission">State Ethics Commission</a>. The commission is the custodian for <a href="https://www.mass.gov/info-details/conflict-of-interest-law-disclosures-filed-with-the-state-ethics-commission">disclosures directly filed with the commission</a>, however, the vast majority of state employees file their disclosures with their appointing authorities.</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="">What is this database?</h2>
+      <p><strong>StateReference Ethics</strong> is a compilation of these disclosures made into a searchable database.</p>
+      <p>We submit public records requests to agencies for the disclosures filed with them. We then OCR the documents and upload them here.</p>
+    </div>
+  </div>
 
   <h2 class="">Data files</h2>
-  <table class="table table-striped w-auto">
+  <table class="table table-striped w-auto small">
     <thead>
       <tr>
         <th scope="col">Received</th>
         <th scope="col">Custodian</th>
-        <th scope="col">File</th>
         <th scope="col">Notes</th>
       </tr>
     </thead>
@@ -35,10 +39,9 @@ layout: default
       {%- for drop in drops %}
       <tr>
         {%- comment -%} url is where the drop was published; not every drop has one {%- endcomment -%}
-        {%- assign received = drop.date | date: "%B %-d, %Y" %}
-        <td>{% if drop.url %}<a href="{{ drop.url | escape }}">{{ received }}</a>{% else %}{{ received }}{% endif %}</td>
+        {%- assign received = drop.date | date: "%b %-d, %Y" %}
+        <td class="text-nowrap">{% if drop.url %}<a href="{{ drop.url | escape }}">{{ received }}</a>{% else %}{{ received }}{% endif %}</td>
         <td>{{ drop.custodian }}</td>
-        <td><code>{{ drop.filename }}</code></td>
         <td>{{ drop.notes | escape }}</td>
       </tr>
       {%- endfor %}
