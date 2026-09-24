@@ -3,10 +3,10 @@ layout: default
 ---
 {% include navbar.html %}
 
-<div class="bg-light py-5">
+<div class="bg-light py-5 mb-5">
   <div class="container">
-    <h1 class="">Ethics Disclosures Database</h1>
-    <p class="lead">The <i>StateReference Ethics</i> database contains {{ site.data.disclosure_count | delimit }} conflict of interest disclosures and statements of financial interests filed by Massachusetts public employees.</p>
+    <h1 class="fw-bold">Ethics Disclosures Database</h1>
+    <p>Search {{ site.data.disclosure_count | delimit }} disclosures and {{ site.data.sfi_count | delimit }} <abbr title="Statement of Financial Interests">SFIs</abbr> filed by Massachusetts public employees.</p>
     {% include search-form.html classes="d-flex" categories=true %}
   </div>
 </div>
