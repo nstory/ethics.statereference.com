@@ -31,13 +31,14 @@ const input = document.querySelector("[data-search-input]");
 const sortWrap = document.querySelector("[data-sort]");
 const sortSelect = document.querySelector("[data-sort-select]");
 
-// The category filter, rendered from _data/categories.yml by the search-form
-// include.  Each checkbox carries the URL slug as its value and the exact
-// Pagefind filter value -- the category name -- in data-category.
-const toggle = document.querySelector("[data-category-toggle]");
-const toggleLabel = document.querySelector("[data-category-toggle-label]");
-const menu = document.querySelector("[data-category-menu]");
+// The category sidebar, which only /search/ has, rendered from
+// _data/categories.yml.  Each checkbox carries the URL slug as its value and
+// the exact Pagefind filter value -- the category name -- in data-category.
+const filterEl = document.querySelector("[data-category-filter]");
 const clearButton = document.querySelector("[data-category-clear]");
+// On a phone the sidebar is a closed drawer, so the button that opens it
+// carries the number ticked -- otherwise nothing on screen says a filter is on.
+const badge = document.querySelector("[data-category-badge]");
 const boxes = [...document.querySelectorAll("[data-category]")];
 
 // The results shell, which only /search/ has.  Everything above is on both
@@ -74,8 +75,8 @@ function getPagefind() {
 function readUrl() {
   const params = new URLSearchParams(location.search);
   const page = parseInt(params.get("page") ?? "1", 10);
-  // Selecting through the menu's own order drops unknown slugs and duplicates,
-  // so a hand-edited URL can't produce a selection the menu can't show.
+  // Selecting through the sidebar's own order drops unknown slugs and
+  // duplicates, so a hand-edited URL can't produce a selection it can't show.
   const slugs = new Set((params.get("category") ?? "").split(","));
   const sort = params.get("sort");
   return {
@@ -185,22 +186,19 @@ function resultItem(result, excerpting) {
   return li;
 }
 
-// Point the menu and its button at the current selection.
+// Point the sidebar at the current selection.
 function renderFilter(categories) {
-  if (!toggle) return;
   for (const box of boxes) box.checked = categories.includes(box.dataset.category);
-  toggleLabel.textContent =
-    categories.length === 0 ? "All categories"
-    : categories.length === 1 ? categories[0]
-    : `${categories.length} categories`;
-  // The label can be cut short on a narrow screen, so carry the full selection
-  // on the button for anyone who can't see the ellipsis resolved.
-  toggle.title = toggleLabel.textContent;
+  clearButton?.classList.toggle("d-none", categories.length === 0);
+  if (badge) {
+    badge.textContent = String(categories.length);
+    badge.hidden = categories.length === 0;
+  }
 }
 
 // `counts` is Pagefind's totalFilters for the current search: the number of
-// results each category would give *instead of* the current selection, which is
-// the number a reader is asking for when they open the menu.
+// results each category would give on its own, whatever else is ticked, which
+// is the number a reader is weighing when deciding what to tick.
 function renderCounts(counts) {
   for (const box of boxes) {
     const label = box.closest("label");
@@ -324,8 +322,8 @@ async function render() {
     if (mine !== token) return;
     // Pagefind only computes totalFilters against a search term; with a null
     // term it returns zeros.  That case needs no help though -- with nothing
-    // searched, "results if this category were picked instead" is just the
-    // category's share of the index, which is what baseCounts holds.
+    // searched, a category's count is just its share of the index, which is
+    // what baseCounts holds.
     cache = { key, results: search.results, counts: query ? search.totalFilters?.category : null };
   }
 
@@ -342,7 +340,8 @@ function go(url, { replace = false } = {}) {
 // The state the controls are currently showing, which is what the reader has
 // typed but may not have submitted -- so picking a category or a sort applies
 // it to the query in the box rather than to the last one searched.  Any change
-// to the result set starts again at page 1.
+// to the result set starts again at page 1.  The homepage has no boxes, so a
+// search from there starts unfiltered.
 function pending() {
   return {
     query: input.value.trim(),
@@ -354,8 +353,7 @@ function pending() {
 
 // Submitting means "show me this".  On /search/ that's a re-render in place;
 // on the homepage it's the trip to /search/ the form would have made on its
-// own -- but by this route, carrying the categories, which a plain GET drops
-// because the boxes have no `name`.
+// own.
 function submit(url) {
   if (hasResults) return go(url);
   location.assign(url);
@@ -366,30 +364,11 @@ form?.addEventListener("submit", (event) => {
   submit(urlFor(pending()));
 });
 
-// Picking a category re-searches in place on /search/, where there are results
-// for it to narrow.  On the homepage it only relabels the button: nothing has
-// been searched yet, and leaving on the first box ticked would take away the
-// chance to tick a second.
-menu?.addEventListener("change", () => {
-  if (hasResults) go(urlFor(pending()));
-  else renderFilter(pending().categories);
-});
-
 sortSelect?.addEventListener("change", () => go(urlFor(pending())));
 
-clearButton?.addEventListener("click", () => {
-  if (!boxes.some((box) => box.checked)) return;
-  if (hasResults) go(urlFor({ ...pending(), categories: [] }));
-  else renderFilter([]);
-});
+filterEl?.addEventListener("change", () => go(urlFor(pending())));
 
-// Opening the menu is a request to see the counts, so load the index then if a
-// search hasn't already done it.
-toggle?.addEventListener("click", () => {
-  getPagefind()
-    .then(() => renderCounts(cache.counts ?? baseCounts))
-    .catch(() => {});
-});
+clearButton?.addEventListener("click", () => go(urlFor({ ...pending(), categories: [] })));
 
 // Warm the indexes while the user is still typing; search() then has less to
 // fetch when they hit enter.
@@ -413,9 +392,4 @@ if (hasResults) {
 
   resultsEl.tabIndex = -1;
   render();
-} else {
-  // Nothing to render without results, but the button still has to name the
-  // selection: coming back to the homepage can restore ticked boxes, so read
-  // the label off the boxes rather than assuming an empty start.
-  renderFilter(pending().categories);
 }

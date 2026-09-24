@@ -1,4 +1,4 @@
-# The categories the search filter offers, in menu order.  These have to match
+# The categories the search sidebar offers, in display order.  These have to match
 # the constants in etl/lib/category.rb exactly -- Pagefind filters on the value
 # string, so a typo here silently yields zero results rather than an error.
 - Financial Interest

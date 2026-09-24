@@ -29,14 +29,12 @@ $h6-font-size: $font-size-base * math.div(1.1rem, $-sr-font-size-base);
 
 @import "bootstrap/scss/bootstrap";
 
-// The category filter's label grows with the name of the chosen category, and
-// on a phone "Appearance of Conflict" leaves the search box about 85px wide.
-// Cap it there and let it ellipsize; the menu still shows the full name.
-[data-category-toggle-label] {
-  max-width: 6rem;
-
-  @include media-breakpoint-up(sm) {
-    max-width: none;
+// In the phone drawer the offcanvas title already says "Categories", so the
+// fieldset's legend would repeat it.  Hide it visually rather than with
+// display: none, which would also take the fieldset's accessible name.
+[data-category-filter] legend {
+  @include media-breakpoint-down(md) {
+    @include visually-hidden;
   }
 }
 
