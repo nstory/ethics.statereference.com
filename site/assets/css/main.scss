@@ -27,6 +27,10 @@ $h4-font-size: $font-size-base * math.div(1.1rem, $-sr-font-size-base);
 $h5-font-size: $font-size-base * math.div(1.1rem, $-sr-font-size-base);
 $h6-font-size: $font-size-base * math.div(1.1rem, $-sr-font-size-base);
 
+// Bold, as fw-bold would give.  Bootstrap's default is 500; its
+// $font-weight-bold isn't defined yet at this point.
+$headings-font-weight: 700;
+
 @import "bootstrap/scss/bootstrap";
 
 // In the phone drawer the offcanvas title already says "Categories", so the
