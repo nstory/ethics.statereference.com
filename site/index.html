@@ -5,28 +5,39 @@ layout: default
 
 <div class="bg-light py-5 mb-5 border-bottom">
   <div class="container">
-    <h1 class="fw-bold">Ethics Disclosures Database</h1>
-    <p>Search {{ site.data.disclosure_count | delimit }} disclosures and {{ site.data.sfi_count | delimit }} <abbr title="Statement of Financial Interests">SFIs</abbr> filed by Massachusetts public employees.</p>
+    <h1 class="fw-bold">StateReference Ethics</h1>
+    <p>Search {{ site.data.disclosure_count | delimit }} disclosures and {{ site.data.sfi_count | delimit }} <abbr title="Statement of Financial Interests">SFIs</abbr> filed by Massachusetts public employees and candidates.</p>
     {% include search-form.html classes="d-flex" %}
   </div>
 </div>
 
 <div class="container">
   <div class="row">
-    <div class="col-md-6">
+    <div class="col-xl-8">
+      <h2>What is this?</h2>
+      <p><strong>StateReference Ethics</strong> is a project by <a href="https://www.nathanielstory.com">Nathan Story</a>. This is a searchable database of ethics disclosures filed by Massachusetts officials detailing their investments, potential conflicts of interest, and more.</p>
+
       <h2 class="">What is a conflict of interest disclosure?</h2>
-      <p>The <a href="https://www.mass.gov/info-details/gl-c-268a-the-conflict-of-interest-law-as-amended-by-c-248-acts-of-2024">Massachusetts Conflict of Interest Law (G.L. c. 268A)</a> requires that public employees file certain disclosures when a conflict of interest could be present. Examples include: travel being reimbursed by a foreign entity, having a financial interest related to your position, or otherwise having the appearance of a conflict of interest.</p>
-      <p>The conflict of interest law is administered and enforced by the <a href="https://www.mass.gov/orgs/state-ethics-commission">State Ethics Commission</a>. The commission is the custodian for <a href="https://www.mass.gov/info-details/conflict-of-interest-law-disclosures-filed-with-the-state-ethics-commission">disclosures directly filed with the commission</a>, however, the vast majority of state employees file their disclosures with their appointing authorities.</p>
-    </div>
-    <div class="col-md-6">
-      <h2 class="">What is this database?</h2>
-      <p><strong>StateReference Ethics</strong> is a compilation of these disclosures made into a searchable database.</p>
-      <p>We submit public records requests to agencies for the disclosures filed with them. We then OCR the documents and upload them here.</p>
+      <p>The <a href="https://www.mass.gov/info-details/gl-c-268a-the-conflict-of-interest-law-as-amended-by-c-248-acts-of-2024">Massachusetts Conflict of Interest Law (G.L. c. 268A)</a> requires that public employees file certain disclosures when a conflict of interest could be present. Examples include:</p>
+      <ul>
+        <li>reimbursement of travel expenses by an outside party</li>
+        <li>a financial interest in a state contract</li>
+        <li>a relationship that creates the appearance of a conflict</li>
+      </ul>
+      <p>See the State Ethics Commission <a href="https://www.mass.gov/file-or-view-conflict-of-interest-law-disclosures">page on conflict of interest law disclosures</a>.</p>
+
+      <h2>What is a statement of financial interests (SFI)?</h2>
+      <p>Each year Massachusetts public employees in policy-making positions and candidates for office are required to file an SFI under the <a href="https://www.mass.gov/info-details/gl-c-268b-the-financial-disclosure-law-as-amended-by-c-248-acts-of-2024">financial disclosure law (G.L. c. 268B)</a>.</p>
+      <p>In the statement, filers list their investments, outside employment, and other financial interests.</p>
+
+      <h2>What is the State Ethics Commission?</h2>
+      <p>The conflict of interest law is administered and enforced by the <a href="https://www.mass.gov/orgs/state-ethics-commission">State Ethics Commission</a>. The commission is the custodian for <a href="https://www.mass.gov/info-details/conflict-of-interest-law-disclosures-filed-with-the-state-ethics-commission">disclosures directly filed with the commission</a>. However, the vast majority of state employees file their disclosures with their appointing authorities.</p>
+      <p>SFIs of state and county employees and candidates are filed with the State Ethics Commission. Municipal employees and candidates file with their municipalities.</p>
     </div>
   </div>
 
-  <h2 class="">Data files</h2>
-  <p>This database is populated with documents received under the Massachusetts Public Records Law. The requests made are listed below.</p>
+  <h2 class="">Public records requests</h2>
+  <p>This database is populated with documents received under the Massachusetts Public Records Law. The requests I made are listed below.</p>
   <table class="table table-striped w-auto small">
     <thead>
       <tr>

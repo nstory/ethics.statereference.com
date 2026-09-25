@@ -63,7 +63,3 @@ One line per PDF, each line is a JSON object with these fields:
 - `agency` filer's agency or department, as written on the form, e.g. `Office of the State Treasurer and Receiver General`; `null` as for `name`, and also for forms without an agency field (e.g. § 6A disclosures by legislators)
 
   `name`, `title` and `agency` are taken from the first form in the PDF and not cleaned up, so the same person or agency can appear with different spellings, capitalization or OCR errors. SFIs aren't parsed, so these three are always `null` for them, and an SFI's `date` is its drop's `year`, with `date_source` `drop`
-
-  ## TODO
-  - [ ] sidebar on SERP, allow filtering by category
-  - [ ] parse agency, name from SEC SFIs
