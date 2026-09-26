@@ -45,34 +45,25 @@ layout: default
       <h2>Public records requests</h2>
       <p>This database is populated with documents received under the Massachusetts Public Records Law. The requests I made are listed below.</p>
       {%- comment -%}
-        One tbody per drop: the date and custodian on one row, the notes under
-        them spanning both columns, so notes get the table's full width.  The
-        tbody groups the pair for striping and borders; see .drops-table.
+        One item per drop, newest first: the date it was received in a gutter
+        on the left, the custodian and notes beside it.  See .drops.
       {%- endcomment %}
-      <table class="table drops-table small">
-        <thead>
-          <tr>
-            <th scope="col">Received</th>
-            <th scope="col">Custodian</th>
-          </tr>
-        </thead>
+      <ol class="drops list-unstyled small">
         {%- assign drops = site.data.disclosure_drops | sort: "date" | reverse -%}
         {%- for drop in drops %}
-        <tbody>
-          <tr>
-            {%- comment -%} url is where the drop was published; not every drop has one {%- endcomment -%}
-            {%- assign received = drop.date | date: "%b %-d, %Y" %}
-            <td class="text-nowrap">{% if drop.url %}<a href="{{ drop.url | escape }}">{{ received }}</a>{% else %}{{ received }}{% endif %}</td>
-            <td>{{ drop.custodian }}</td>
-          </tr>
-          {%- if drop.notes %}
-          <tr>
-            <td colspan="2">{{ drop.notes | escape }}</td>
-          </tr>
-          {%- endif %}
-        </tbody>
+        <li>
+          {%- comment -%} url is where the drop was published; not every drop has one {%- endcomment -%}
+          {%- assign received = drop.date | date: "%b %-d, %Y" %}
+          <time datetime="{{ drop.date | date: '%Y-%m-%d' }}">{% if drop.url %}<a href="{{ drop.url | escape }}">{{ received }}</a>{% else %}{{ received }}{% endif %}</time>
+          <div>
+            <div class="fw-semibold">{{ drop.custodian }}</div>
+            {%- if drop.notes %}
+            <p class="mb-0 text-body-secondary">{{ drop.notes | escape }}</p>
+            {%- endif %}
+          </div>
+        </li>
         {%- endfor %}
-      </table>
+      </ol>
     </div>
   </div>
 </div>

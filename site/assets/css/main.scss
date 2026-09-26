@@ -65,17 +65,31 @@ $headings-font-weight: 700;
   }
 }
 
-// The homepage's drops table, where each drop is a tbody of two rows.
-// table-striped stripes rows, which would split each pair; stripe the tbodies
-// instead, and keep the border off between a drop's own rows.
-.drops-table {
-  > tbody:nth-of-type(odd) > tr > * {
-    --#{$prefix}table-bg-type: var(--#{$prefix}table-striped-bg);
+// The homepage's list of drops.  Each is a two-column grid, the date in a
+// fixed gutter so the custodians line up down the list, hairlines between
+// drops rather than stripes.  Phones don't have the width for the gutter, so
+// there the date stacks above the custodian.
+.drops {
+  > li {
+    display: grid;
+    grid-template-columns: 7.5em 1fr;
+    column-gap: 1.5rem;
+    padding: 0.875rem 0;
+    border-top: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+
+    &:last-child {
+      border-bottom: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+    }
+
+    @include media-breakpoint-down(sm) {
+      grid-template-columns: 1fr;
+    }
   }
 
-  > tbody > tr:not(:last-child) > * {
-    border-bottom-width: 0;
-    padding-bottom: 0;
+  time {
+    color: var(--#{$prefix}secondary-color);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 }
 
