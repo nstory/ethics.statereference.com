@@ -32,6 +32,8 @@ module Disclosures
           "disclosure" => disclosure,
           "pdf_url" => "#{files_url}/disclosures/#{disclosure["filename"]}"
         )
+        description = describe(disclosure)
+        page.data["description"] = description if description
         site.pages << page
         if disclosure["category"] == "Statement of Financial Interests"
           sfi_count += 1
@@ -44,6 +46,24 @@ module Disclosures
 
       metadata = JSON.parse(File.read(File.expand_path("../etl/output/metadata.json", site.source)))
       site.data["disclosure_drops"] = metadata["drops"]
+    end
+
+    private
+
+    # The page's meta description (jekyll-seo-tag), e.g. "Statement of Financial
+    # Interests filed by Maura Healey in 2024."  Many records have no name and a
+    # few no date; whichever is missing is left out, and with neither there's
+    # nothing to say beyond the site's own description, so this returns nil.
+    def describe(disclosure)
+      name = disclosure["name"]
+      year = disclosure["date"].to_s[0, 4]
+      return nil if name.to_s.empty? && year.empty?
+
+      kind = disclosure["category"] == "Statement of Financial Interests" ? "Statement of Financial Interests" : "Disclosure"
+      parts = [kind, "filed"]
+      parts << "by #{name}" unless name.to_s.empty?
+      parts << "in #{year}" unless year.empty?
+      "#{parts.join(" ")}."
     end
   end
 end
