@@ -196,9 +196,9 @@ function renderFilter(categories) {
   }
 }
 
-// `counts` is Pagefind's totalFilters for the current search: the number of
-// results each category would give on its own, whatever else is ticked, which
-// is the number a reader is weighing when deciding what to tick.
+// `counts` is the number of results each category would give on its own for
+// the current search, whatever else is ticked, which is the number a reader is
+// weighing when deciding what to tick.
 function renderCounts(counts) {
   for (const box of boxes) {
     const label = box.closest("label");
@@ -305,6 +305,7 @@ async function render() {
     pagerEl.replaceChildren();
 
     let search;
+    let counts = null;
     try {
       const api = await getPagefind();
       // A null term filters without searching.  With a category that means
@@ -314,17 +315,23 @@ async function render() {
         filters: categories.length ? { category: { any: categories } } : {},
         sort: SORTS[sort] ?? {},
       });
+      // The counts come from an unfiltered search's `filters`, not from
+      // totalFilters: for a quoted phrase Pagefind counts totalFilters before
+      // it checks the phrase, so "state police" showed Travel & Gifts as 76
+      // when ticking it gave 7.  category is the only filter, so the unfiltered
+      // search's per-category counts are exactly what ticking each one gives.
+      // With no term there's nothing to count against; baseCounts covers that.
+      if (query) {
+        const unfiltered = categories.length ? await api.search(query) : search;
+        counts = unfiltered.filters?.category ?? null;
+      }
     } catch (error) {
       console.error("[search] Pagefind failed to load or search", error);
       summaryEl.textContent = "Search is unavailable right now.";
       return;
     }
     if (mine !== token) return;
-    // Pagefind only computes totalFilters against a search term; with a null
-    // term it returns zeros.  That case needs no help though -- with nothing
-    // searched, a category's count is just its share of the index, which is
-    // what baseCounts holds.
-    cache = { key, results: search.results, counts: query ? search.totalFilters?.category : null };
+    cache = { key, results: search.results, counts };
   }
 
   renderCounts(cache.counts ?? baseCounts);
