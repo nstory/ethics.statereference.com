@@ -11,9 +11,7 @@
   </head>
   <body>
     {{ content }}
-    {%- unless page.layout == "disclosure" %}
-      {% include footer.html %}
-    {%- endunless %}
+    {% include footer.html %}
     <script src="{{ '/assets/js/bootstrap.bundle.min.js' | relative_url }}"></script>
   </body>
 </html>

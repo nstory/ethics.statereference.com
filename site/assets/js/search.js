@@ -1,5 +1,6 @@
 // The search box, and -- on /search/ -- the results it produces, backed by the
-// Pagefind index built from the hidden fulltext in _layouts/disclosure.html.
+// Pagefind index that index.mjs builds from etl/output/pdfs.jsonl.  Each
+// result's url is the PDF itself, so the results link straight to it.
 //
 // Both pages that render the form load this.  The form behaves the same on each
 // one; the difference is where a search goes.  /search/ has the results shell,
@@ -16,7 +17,7 @@ const PAGE_WINDOW = 2; // page links shown either side of the current one
 // What the sort control offers, and what each option means to Pagefind.  A
 // sort replaces relevance ranking rather than refining it -- Pagefind will do
 // one or the other -- so "relevance" is the absence of a sort, not a key of
-// its own.  The key is date, indexed by _layouts/disclosure.html.
+// its own.  The key is date, indexed by index.mjs.
 const SORTS = {
   relevance: null,
   newest: { date: "desc" },
