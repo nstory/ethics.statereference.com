@@ -32,6 +32,7 @@ files_url: "https://ethics-files.nathanielstory.com"
 # theme: minima
 plugins:
   - jekyll-seo-tag
+  - jekyll-sitemap
 
 sass:
   style: compressed
