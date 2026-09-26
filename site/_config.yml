@@ -21,6 +21,9 @@
 title: StateReference Ethics Database
 description: >- # this means to ignore newlines until "baseurl:"
   Conflict of interest law disclosures and statements of financial interests from Massachusetts officials
+# Appended to the homepage <title> by jekyll-seo-tag in place of the
+# description, which is too long for a title.
+tagline: Massachusetts Ethics Disclosures
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://ethics.statereference.com" # the base hostname & protocol for your site, e.g. http://example.com
 
@@ -33,6 +36,15 @@ files_url: "https://ethics-files.nathanielstory.com"
 plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
+
+# The link-preview image (og:image, twitter:image) for every page.
+# jekyll-seo-tag only reads `image` from the page, hence a default rather than
+# a site setting.  The logo on white at 1200x630, the size link previews expect.
+defaults:
+  - scope:
+      path: ""
+    values:
+      image: /assets/img/share.png
 
 sass:
   style: compressed
