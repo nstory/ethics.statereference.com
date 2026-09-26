@@ -16,6 +16,10 @@ $blue: #3D97B8;
 $dark: #0D0B08;
 $body-color: $dark;
 
+// $blue on white is only ~3.3:1, under WCAG AA's 4.5:1 for body text, so links
+// get a darker shade of it (~5.6:1).  $blue stays the accent everywhere else.
+$link-color: #2A6F88;
+
 // statereference.com's flattened heading sizes.  They're written there
 // against a 1.1rem base; copied as-is, they'd make h2 the size of body text
 // here and h4-h6 smaller than it, so keep their ratios to the base instead.
@@ -39,6 +43,40 @@ $headings-font-weight: 700;
 [data-category-filter] legend {
   @include media-breakpoint-down(md) {
     @include visually-hidden;
+  }
+}
+
+// Homepage sections.  Bootstrap gives headings no top margin, so each h2 sat
+// right under the previous paragraph.  A column's first h2 is exempt: it
+// already sits below the hero's margin -- except the second column's once the
+// columns stack, where it follows the first column's last paragraph.
+.home-content {
+  h2 {
+    margin-top: 2.5rem;
+  }
+
+  > .row > :first-child > h2:first-child {
+    margin-top: 0;
+  }
+
+  @include media-breakpoint-up(lg) {
+    > .row > * > h2:first-child {
+      margin-top: 0;
+    }
+  }
+}
+
+// The homepage's drops table, where each drop is a tbody of two rows.
+// table-striped stripes rows, which would split each pair; stripe the tbodies
+// instead, and keep the border off between a drop's own rows.
+.drops-table {
+  > tbody:nth-of-type(odd) > tr > * {
+    --#{$prefix}table-bg-type: var(--#{$prefix}table-striped-bg);
+  }
+
+  > tbody > tr:not(:last-child) > * {
+    border-bottom-width: 0;
+    padding-bottom: 0;
   }
 }
 

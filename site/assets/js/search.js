@@ -264,7 +264,7 @@ async function renderPage(state) {
   // Without a query the reader is browsing rather than searching, so the summary
   // drops the "for ..." and counts disclosures -- there was no search for them
   // to be the result of.
-  const forQuery = query ? ` for “${query}”` : "";
+  const forQuery = query ? ` for ${query}` : "";
   const noun = query ? "result" : "disclosure";
 
   if (total === 0) {
@@ -300,7 +300,7 @@ async function render() {
   const key = cacheKey(state);
   if (key !== cache.key) {
     const mine = ++token;
-    summaryEl.textContent = query ? `Searching for “${query}”…` : "Loading disclosures…";
+    summaryEl.textContent = query ? `Searching for ${query}…` : "Loading disclosures…";
     resultsEl.replaceChildren();
     pagerEl.replaceChildren();
 

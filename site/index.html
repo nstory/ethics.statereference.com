@@ -8,12 +8,18 @@ layout: default
     <h1>StateReference Ethics</h1>
     <p>Search {{ site.data.disclosure_count | delimit }} disclosures and {{ site.data.sfi_count | delimit }} <abbr title="Statement of Financial Interests">SFIs</abbr> filed by Massachusetts public employees and candidates.</p>
     {% include search-form.html classes="d-flex" %}
+    {%- assign examples = 'Israel|"Maura Healey"|"District Attorney"' | split: "|" %}
+    <p class="small mt-2 mb-0">Try:
+      {%- for q in examples %}
+      <a href="{{ '/search/' | relative_url }}?q={{ q | url_encode }}">{{ q | escape }}</a>{% unless forloop.last %},{% endunless %}
+      {%- endfor %}
+    </p>
   </div>
 </div>
 
-<div class="container">
-  <div class="row">
-    <div class="col-xl-8">
+<div class="container home-content">
+  <div class="row gx-5">
+    <div class="col-lg-6">
       <h2>What is this?</h2>
       <p><strong>StateReference Ethics</strong> is a project by <a href="https://www.nathanielstory.com">Nathan Story</a>. This is a searchable database of ethics disclosures filed by Massachusetts officials detailing their investments, potential conflicts of interest, and more.</p>
 
@@ -34,31 +40,41 @@ layout: default
       <p>The conflict of interest law is administered and enforced by the <a href="https://www.mass.gov/orgs/state-ethics-commission">State Ethics Commission</a>. The commission is the custodian for <a href="https://www.mass.gov/info-details/conflict-of-interest-law-disclosures-filed-with-the-state-ethics-commission">disclosures directly filed with the commission</a>. However, the vast majority of state employees file their disclosures with their appointing authorities.</p>
       <p>SFIs of state and county employees and candidates are filed with the State Ethics Commission. Municipal employees and candidates file with their municipalities.</p>
     </div>
-  </div>
 
-  <h2>Public records requests</h2>
-  <p>This database is populated with documents received under the Massachusetts Public Records Law. The requests I made are listed below.</p>
-  <table class="table table-striped w-auto small">
-    <thead>
-      <tr>
-        <th scope="col">Received</th>
-        <th scope="col">Custodian</th>
-        <th scope="col">Notes</th>
-      </tr>
-    </thead>
-    <tbody>
-      {%- assign drops = site.data.disclosure_drops | sort: "date" | reverse -%}
-      {%- for drop in drops %}
-      <tr>
-        {%- comment -%} url is where the drop was published; not every drop has one {%- endcomment -%}
-        {%- assign received = drop.date | date: "%b %-d, %Y" %}
-        <td class="text-nowrap">{% if drop.url %}<a href="{{ drop.url | escape }}">{{ received }}</a>{% else %}{{ received }}{% endif %}</td>
-        <td>{{ drop.custodian }}</td>
-        <td>{{ drop.notes | escape }}</td>
-      </tr>
-      {%- endfor %}
-    </tbody>
-  </table>
+    <div class="col-lg-6">
+      <h2>Public records requests</h2>
+      <p>This database is populated with documents received under the Massachusetts Public Records Law. The requests I made are listed below.</p>
+      {%- comment -%}
+        One tbody per drop: the date and custodian on one row, the notes under
+        them spanning both columns, so notes get the table's full width.  The
+        tbody groups the pair for striping and borders; see .drops-table.
+      {%- endcomment %}
+      <table class="table drops-table small">
+        <thead>
+          <tr>
+            <th scope="col">Received</th>
+            <th scope="col">Custodian</th>
+          </tr>
+        </thead>
+        {%- assign drops = site.data.disclosure_drops | sort: "date" | reverse -%}
+        {%- for drop in drops %}
+        <tbody>
+          <tr>
+            {%- comment -%} url is where the drop was published; not every drop has one {%- endcomment -%}
+            {%- assign received = drop.date | date: "%b %-d, %Y" %}
+            <td class="text-nowrap">{% if drop.url %}<a href="{{ drop.url | escape }}">{{ received }}</a>{% else %}{{ received }}{% endif %}</td>
+            <td>{{ drop.custodian }}</td>
+          </tr>
+          {%- if drop.notes %}
+          <tr>
+            <td colspan="2">{{ drop.notes | escape }}</td>
+          </tr>
+          {%- endif %}
+        </tbody>
+        {%- endfor %}
+      </table>
+    </div>
+  </div>
 </div>
 
 <script type="module" src="{{ '/assets/js/search.js' | relative_url }}"></script>
