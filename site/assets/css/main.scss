@@ -1,13 +1,12 @@
 ---
 ---
-@use "sass:math";
 
 // Bootstrap variable overrides go here, before the import.
 // See node_modules/bootstrap/scss/_variables.scss for the full list.
 
 // Base text size.  Bootstrap derives headings, buttons and form controls from
 // this, so bumping it scales the whole type ramp rather than body copy alone.
-$font-size-base: 1.5rem;
+$font-size-base: 1.25rem;
 
 // Colours from statereference.com's theme (application.bootstrap.scss there),
 // https://coolors.co/3d97b8-0d0b08-7fb069-f44708.  $primary defaults to $blue,
@@ -20,16 +19,16 @@ $body-color: $dark;
 // get a darker shade of it (~5.6:1).  $blue stays the accent everywhere else.
 $link-color: #2A6F88;
 
-// statereference.com's flattened heading sizes.  They're written there
-// against a 1.1rem base; copied as-is, they'd make h2 the size of body text
-// here and h4-h6 smaller than it, so keep their ratios to the base instead.
-$-sr-font-size-base: 1.1rem;
-$h1-font-size: $font-size-base * math.div(1.5rem, $-sr-font-size-base);
-$h2-font-size: $font-size-base * math.div(1.5rem, $-sr-font-size-base);
-$h3-font-size: $font-size-base * math.div(1.3rem, $-sr-font-size-base);
-$h4-font-size: $font-size-base * math.div(1.1rem, $-sr-font-size-base);
-$h5-font-size: $font-size-base * math.div(1.1rem, $-sr-font-size-base);
-$h6-font-size: $font-size-base * math.div(1.1rem, $-sr-font-size-base);
+// Heading sizes as multiples of the base.  h1 stands clear of h2 so a page's
+// title outranks its sections; h4-h6 stay at body size, bold, for titles
+// within a list, like search results.  Bootstrap's RFS shrinks the larger
+// ones on narrow screens.
+$h1-font-size: $font-size-base * 2;
+$h2-font-size: $font-size-base * 1.5;
+$h3-font-size: $font-size-base * 1.25;
+$h4-font-size: $font-size-base;
+$h5-font-size: $font-size-base;
+$h6-font-size: $font-size-base;
 
 // Bold, as fw-bold would give.  Bootstrap's default is 500; its
 // $font-weight-bold isn't defined yet at this point.
