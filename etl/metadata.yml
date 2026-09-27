@@ -6,7 +6,7 @@
   custodian: State Ethics Commission
   kind: sfi
   year: 2024
-  notes: All 2024 Statements of Financial Interests filed with the State Ethics Commission, 4,019 filers.
+  notes: All 2024 Statements of Financial Interests filed with the State Ethics Commission. 4,019 filers.
 
 2026-04-09-sec.zip:
   custodian: State Ethics Commission
@@ -35,3 +35,9 @@
   custodian: Operational Services Division
   notes: All disclosures from 2020 to August 2026
   url: https://blog.nathanielstory.com/blog/osd-ethics-disclosures/
+
+2026-09-15-sfi-sec.zip:
+  custodian: State Ethics Commission
+  kind: sfi
+  year: 2025
+  notes: All 2025 Statements of Financial Interests filed with the Ethics Commission. 4,203 filers.
