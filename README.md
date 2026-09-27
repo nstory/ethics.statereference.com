@@ -23,3 +23,6 @@ Almost all of the code in this repo was written by [Claude Code](https://claude.
 
 ## CONTRIBUTIONS
 The ETL portion of the project probably only runs on my machine. If you do wish to contribute, you probably shouldn't try modifying the code by hand. Ask an AI coding agent to do the work.
+
+## LICENSE
+MIT
