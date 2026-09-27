@@ -8,8 +8,10 @@
 // files_url is _config.yml's, passed in by the Makefile so this needs no YAML
 // parser of its own.
 //
-// Every field search.js displays is in meta.  category is also the only
-// filter, and date the only sort key.  Most dates are a full ISO date, but some
+// Every field search.js displays is in meta.  category and year are the
+// filters, and date the only sort key.  year is the first four characters of
+// date, so the 1 in 300 PDFs we couldn't date have no year and drop out of any
+// search that filters on one.  Most dates are a full ISO date, but some
 // are only a year and month or a bare year, and Pagefind compares a sort key as
 // text unless every value is numeric -- so the short ones sort to the edge of
 // their year rather than out of it, which is as good as the date we have.
@@ -59,7 +61,10 @@ for await (const line of lines) {
       category: disclosure.category,
       date: disclosure.date,
     }),
-    filters: { category: [disclosure.category] },
+    filters: {
+      category: [disclosure.category],
+      ...(disclosure.date ? { year: [disclosure.date.slice(0, 4)] } : {}),
+    },
     sort: present({ date: disclosure.date }),
   });
   if (errors.length) throw new Error(`pagefind: ${disclosure.filename}: ${errors.join("; ")}`);

@@ -36,15 +36,6 @@ $headings-font-weight: 700;
 
 @import "bootstrap/scss/bootstrap";
 
-// In the phone drawer the offcanvas title already says "Categories", so the
-// fieldset's legend would repeat it.  Hide it visually rather than with
-// display: none, which would also take the fieldset's accessible name.
-[data-category-filter] legend {
-  @include media-breakpoint-down(md) {
-    @include visually-hidden;
-  }
-}
-
 // Homepage sections.  Bootstrap gives headings no top margin, so each h2 sat
 // right under the previous paragraph.  A column's first h2 is exempt: it
 // already sits below the hero's margin -- except the second column's once the

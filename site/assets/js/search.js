@@ -32,15 +32,25 @@ const input = document.querySelector("[data-search-input]");
 const sortWrap = document.querySelector("[data-sort]");
 const sortSelect = document.querySelector("[data-sort-select]");
 
-// The category sidebar, which only /search/ has, rendered from
-// _data/categories.yml.  Each checkbox carries the URL slug as its value and
-// the exact Pagefind filter value -- the category name -- in data-category.
-const filterEl = document.querySelector("[data-category-filter]");
-const clearButton = document.querySelector("[data-category-clear]");
+// The sidebar's filters, which only /search/ has: one fieldset per Pagefind
+// filter, named in data-filter, which is also its URL parameter.  Each
+// checkbox carries the URL slug as its value and the exact Pagefind filter
+// value in data-value.  `scope` is how the summary line phrases a selection.
+const FACETS = [
+  { name: "category", scope: (values) => ` in ${values.join(" or ")}` },
+  { name: "year", scope: (values) => ` from ${values.join(" or ")}` },
+].map((facet) => {
+  const fieldset = document.querySelector(`[data-filter="${facet.name}"]`);
+  return {
+    ...facet,
+    fieldset,
+    clearButton: fieldset?.querySelector("[data-filter-clear]"),
+    boxes: [...(fieldset?.querySelectorAll("[data-value]") ?? [])],
+  };
+});
 // On a phone the sidebar is a closed drawer, so the button that opens it
 // carries the number ticked -- otherwise nothing on screen says a filter is on.
-const badge = document.querySelector("[data-category-badge]");
-const boxes = [...document.querySelectorAll("[data-category]")];
+const badge = document.querySelector("[data-filter-badge]");
 
 // The results shell, which only /search/ has.  Everything above is on both
 // pages; these three are what let this one answer a search rather than send it.
@@ -52,10 +62,7 @@ const hasResults = Boolean(summaryEl && resultsEl && pagerEl);
 const target = form?.getAttribute("action") ?? location.pathname;
 
 let pagefindPromise = null;
-// Counts for every category across the whole index, from pagefind.filters().
-// Used when nothing is being searched; a live search has better numbers.
-let baseCounts = null;
-let cache = { key: null, results: [], counts: null };
+let cache = { key: null, results: [], counts: {} };
 // Bumped on every new search so a slow one that lands after a newer one can
 // tell it's stale and bail out instead of overwriting the newer results.
 let token = 0;
@@ -63,11 +70,11 @@ let token = 0;
 function getPagefind() {
   // Cache the promise, not the module: init() and filters() have to finish
   // before anyone searches, and preload() races search() for this call.
-  // filters() is also what makes Pagefind return counts alongside each search.
+  // filters() is what makes Pagefind return counts alongside each search.
   pagefindPromise ??= (async () => {
     const api = await import(form.dataset.pagefindBundle);
     await api.init();
-    baseCounts = (await api.filters()).category ?? null;
+    await api.filters();
     return api;
   })();
   return pagefindPromise;
@@ -78,25 +85,30 @@ function readUrl() {
   const page = parseInt(params.get("page") ?? "1", 10);
   // Selecting through the sidebar's own order drops unknown slugs and
   // duplicates, so a hand-edited URL can't produce a selection it can't show.
-  const slugs = new Set((params.get("category") ?? "").split(","));
+  const filters = {};
+  for (const { name, boxes } of FACETS) {
+    const slugs = new Set((params.get(name) ?? "").split(","));
+    filters[name] = boxes.filter((box) => slugs.has(box.value)).map((box) => box.dataset.value);
+  }
   const sort = params.get("sort");
   return {
     query: (params.get("q") ?? "").trim(),
-    categories: boxes.filter((box) => slugs.has(box.value)).map((box) => box.dataset.category),
+    filters,
     // hasOwn, not `in`: `?sort=toString` would otherwise name a real key.
     sort: Object.hasOwn(SORTS, sort) ? sort : "relevance",
     page: Number.isFinite(page) && page > 0 ? page : 1,
   };
 }
 
-// Takes a whole state -- {query, categories, sort, page} -- since every control
-// changes one field of it and leaves the rest alone.
-function urlFor({ query, categories, sort, page }) {
+// Takes a whole state -- {query, filters, sort, page}, where filters maps each
+// facet's name to its selected values -- since every control changes one
+// field of it and leaves the rest alone.
+function urlFor({ query, filters, sort, page }) {
   const params = new URLSearchParams();
   if (query) params.set("q", query);
-  if (categories.length) {
-    const chosen = boxes.filter((box) => categories.includes(box.dataset.category));
-    params.set("category", chosen.map((box) => box.value).join(","));
+  for (const { name, boxes } of FACETS) {
+    const chosen = boxes.filter((box) => filters[name]?.includes(box.dataset.value));
+    if (chosen.length) params.set(name, chosen.map((box) => box.value).join(","));
   }
   if (sort !== "relevance") params.set("sort", sort);
   if (page > 1) params.set("page", String(page));
@@ -107,14 +119,25 @@ function urlFor({ query, categories, sort, page }) {
 // Identifies a result set, so paging within one doesn't re-run the search.
 // Sort is part of it: Pagefind orders the set as it builds it, so a different
 // order is a different search rather than a re-arrangement of this one.
-function cacheKey({ query, categories, sort }) {
-  return JSON.stringify([categories, sort, query]);
+function cacheKey({ query, filters, sort }) {
+  return JSON.stringify([filters, sort, query]);
 }
 
-// "in Travel & Gifts", "in Travel & Gifts or Other" -- the filter ORs within
-// itself, so "or" is what a multiple selection actually means.
-function scope(categories) {
-  return categories.length ? ` in ${categories.join(" or ")}` : "";
+// " in Travel & Gifts or Other from 2024" -- each filter ORs within itself, so
+// "or" is what a multiple selection actually means, and the filters AND with
+// each other.
+function scope(filters) {
+  return FACETS.map(({ name, scope }) => (filters[name].length ? scope(filters[name]) : "")).join("");
+}
+
+// The Pagefind filters for a selection, leaving out `except`: a facet's counts
+// come from a search filtered by every facet but itself.
+function pagefindFilters(filters, except = null) {
+  const out = {};
+  for (const { name } of FACETS) {
+    if (name !== except && filters[name].length) out[name] = { any: filters[name] };
+  }
+  return out;
 }
 
 function pageNumbers(current, total) {
@@ -188,27 +211,34 @@ function resultItem(result, excerpting) {
 }
 
 // Point the sidebar at the current selection.
-function renderFilter(categories) {
-  for (const box of boxes) box.checked = categories.includes(box.dataset.category);
-  clearButton?.classList.toggle("d-none", categories.length === 0);
+function renderFilters(filters) {
+  let ticked = 0;
+  for (const { name, boxes, clearButton } of FACETS) {
+    for (const box of boxes) box.checked = filters[name].includes(box.dataset.value);
+    clearButton?.classList.toggle("d-none", filters[name].length === 0);
+    ticked += filters[name].length;
+  }
   if (badge) {
-    badge.textContent = String(categories.length);
-    badge.hidden = categories.length === 0;
+    badge.textContent = String(ticked);
+    badge.hidden = ticked === 0;
   }
 }
 
-// `counts` is the number of results each category would give on its own for
-// the current search, whatever else is ticked, which is the number a reader is
-// weighing when deciding what to tick.
+// `counts` maps each facet to the number of results each of its values would
+// give for the current search and the other facets' selections, whatever else
+// is ticked in this one -- the number a reader is weighing when deciding what
+// to tick.  A value missing from a facet's counts has no results.
 function renderCounts(counts) {
-  for (const box of boxes) {
-    const label = box.closest("label");
-    const n = counts?.[box.dataset.category];
-    label.querySelector("[data-category-count]").textContent = n?.toLocaleString() ?? "";
-    // A dead end stays visible but unpickable.  A checked box always stays
-    // pickable, or there'd be no way to undo it.
-    box.disabled = n === 0 && !box.checked;
-    label.classList.toggle("opacity-50", box.disabled);
+  for (const { name, boxes } of FACETS) {
+    for (const box of boxes) {
+      const label = box.closest("label");
+      const n = counts[name] ? (counts[name][box.dataset.value] ?? 0) : null;
+      label.querySelector("[data-filter-count]").textContent = n?.toLocaleString() ?? "";
+      // A dead end stays visible but unpickable.  A checked box always stays
+      // pickable, or there'd be no way to undo it.
+      box.disabled = n === 0 && !box.checked;
+      label.classList.toggle("opacity-50", box.disabled);
+    }
   }
 }
 
@@ -252,7 +282,7 @@ function renderPager(state, totalPages) {
 }
 
 async function renderPage(state) {
-  const { query, categories } = state;
+  const { query, filters } = state;
   const total = cache.results.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if (state.page > totalPages) {
@@ -269,7 +299,7 @@ async function renderPage(state) {
   const noun = query ? "result" : "disclosure";
 
   if (total === 0) {
-    summaryEl.textContent = `No ${noun}s${forQuery}${scope(categories)}.`;
+    summaryEl.textContent = `No ${noun}s${forQuery}${scope(filters)}.`;
     resultsEl.replaceChildren();
     pagerEl.replaceChildren();
     showSort(false);
@@ -284,7 +314,7 @@ async function renderPage(state) {
   if (mine !== token) return;
 
   summaryEl.textContent =
-    `${total.toLocaleString()} ${total === 1 ? noun : `${noun}s`}${forQuery}${scope(categories)} · ` +
+    `${total.toLocaleString()} ${total === 1 ? noun : `${noun}s`}${forQuery}${scope(filters)} · ` +
     `showing ${(first + 1).toLocaleString()}–${(first + results.length).toLocaleString()}`;
   resultsEl.replaceChildren(...results.map((result) => resultItem(result, Boolean(query))));
   renderPager(state, totalPages);
@@ -293,9 +323,9 @@ async function renderPage(state) {
 
 async function render() {
   const state = readUrl();
-  const { query, categories, sort } = state;
+  const { query, filters, sort } = state;
   if (input && input.value !== query) input.value = query;
-  renderFilter(categories);
+  renderFilters(filters);
   if (sortSelect) sortSelect.value = sort;
 
   const key = cacheKey(state);
@@ -306,25 +336,28 @@ async function render() {
     pagerEl.replaceChildren();
 
     let search;
-    let counts = null;
+    const counts = {};
     try {
       const api = await getPagefind();
-      // A null term filters without searching.  With a category that means
+      // A null term filters without searching.  With a filter that means
       // browse every disclosure of that kind; with nothing at all it means
       // browse the lot, which is what /search/ opens on.
       search = await api.search(query || null, {
-        filters: categories.length ? { category: { any: categories } } : {},
+        filters: pagefindFilters(filters),
         sort: SORTS[sort] ?? {},
       });
-      // The counts come from an unfiltered search's `filters`, not from
-      // totalFilters: for a quoted phrase Pagefind counts totalFilters before
-      // it checks the phrase, so "state police" showed Travel & Gifts as 76
-      // when ticking it gave 7.  category is the only filter, so the unfiltered
-      // search's per-category counts are exactly what ticking each one gives.
-      // With no term there's nothing to count against; baseCounts covers that.
-      if (query) {
-        const unfiltered = categories.length ? await api.search(query) : search;
-        counts = unfiltered.filters?.category ?? null;
+      // Each facet's counts come from the `filters` of a search filtered by
+      // every other facet but not by itself, so they're what ticking each value
+      // would give.  Not from totalFilters: for a quoted phrase Pagefind counts
+      // totalFilters before it checks the phrase, so "state police" showed
+      // Travel & Gifts as 76 when ticking it gave 7.  A facet with nothing
+      // ticked is filtered by the other facets alone already, so the main
+      // search's counts serve.
+      for (const { name } of FACETS) {
+        const others = filters[name].length
+          ? await api.search(query || null, { filters: pagefindFilters(filters, name) })
+          : search;
+        counts[name] = others.filters?.[name] ?? null;
       }
     } catch (error) {
       console.error("[search] Pagefind failed to load or search", error);
@@ -335,7 +368,7 @@ async function render() {
     cache = { key, results: search.results, counts };
   }
 
-  renderCounts(cache.counts ?? baseCounts);
+  renderCounts(cache.counts);
   await renderPage(state);
 }
 
@@ -346,14 +379,16 @@ function go(url, { replace = false } = {}) {
 }
 
 // The state the controls are currently showing, which is what the reader has
-// typed but may not have submitted -- so picking a category or a sort applies
+// typed but may not have submitted -- so picking a filter or a sort applies
 // it to the query in the box rather than to the last one searched.  Any change
 // to the result set starts again at page 1.  The homepage has no boxes, so a
 // search from there starts unfiltered.
 function pending() {
   return {
     query: input.value.trim(),
-    categories: boxes.filter((box) => box.checked).map((box) => box.dataset.category),
+    filters: Object.fromEntries(
+      FACETS.map(({ name, boxes }) => [name, boxes.filter((box) => box.checked).map((box) => box.dataset.value)]),
+    ),
     sort: sortSelect?.value ?? "relevance",
     page: 1,
   };
@@ -374,9 +409,13 @@ form?.addEventListener("submit", (event) => {
 
 sortSelect?.addEventListener("change", () => go(urlFor(pending())));
 
-filterEl?.addEventListener("change", () => go(urlFor(pending())));
-
-clearButton?.addEventListener("click", () => go(urlFor({ ...pending(), categories: [] })));
+for (const { name, fieldset, clearButton } of FACETS) {
+  fieldset?.addEventListener("change", () => go(urlFor(pending())));
+  clearButton?.addEventListener("click", () => {
+    const state = pending();
+    go(urlFor({ ...state, filters: { ...state.filters, [name]: [] } }));
+  });
+}
 
 // Warm the indexes while the user is still typing; search() then has less to
 // fetch when they hit enter.
