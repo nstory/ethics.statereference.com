@@ -46,3 +46,8 @@
 2026-10-05-worcester.zip:
   custodian: City of Worcester
   notes: 143 disclosures posted to the Worcester open data portal
+
+2026-10-09-sec.zip:
+  custodian: State Ethics Commission
+  notes: All disclosures filed September 2026.
+  url: https://blog.nathanielstory.com/blog/ethics-disclosures-sept-2026/
