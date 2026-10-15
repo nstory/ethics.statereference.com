@@ -9,7 +9,9 @@ require "date"
 # point at it, in descending order of precision:
 #
 #   filename  the Commission names most files after the date, American style
-#             ("8.23.12", "12.5.2012") or ISO ("2013-11-13", "2014-8-15")
+#             ("8.23.12", "12.5.2012") or ISO ("2013-11-13", "2014-8-15");
+#             a few name only a year and month ("2023_June_Ireland") or
+#             just a year ("RSA_ethics_disclosure_2022")
 #   stamp     "RECEIVED / STATE ETHICS COMMISSION / 2012 AUG 23 AM 10:59",
 #             OCRed off the scan
 #   folder    the drops are filed in per-year ("2012/") or per-month
@@ -33,6 +35,14 @@ module Filing
   ISO = /\b((?:19|20)\d{2})[-.](\d{1,2})[-.](\d{1,2})\b/
   # "8.23.12", "12.5.2012", "9/12/25" -- month first
   US = %r{\b(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2,4})\b}
+
+  # "2023, June (Ireland)", "2024_August_Taiwan".  Whole month names and the usual
+  # abbreviations only, and nothing alphabetic after, so "2023_Marketing" isn't
+  # March.  Lookarounds rather than \b, which doesn't fire between a digit and
+  # an underscore.
+  FILENAME_MONTH = /(?<!\d)(20\d{2})[ _.,\-]+(#{Date::MONTHNAMES.compact.join("|")}|#{MONTHS.join("|")}|sept)(?![a-z])/i
+  # Any four digits that could be a year in the corpus, as a last resort.
+  FILENAME_YEAR = /(?<!\d)(20\d{2})(?!\d)/
 
   # The received stamp.  The time is what makes it a stamp rather than prose
   # or a column of OCRed numbers, so we insist on it, and match within one
@@ -58,10 +68,14 @@ module Filing
       { date: date.iso8601, date_source: "filename" }
     elsif stamp && (year.nil? || (stamp.year - year).abs <= STAMP_SLACK)
       { date: stamp.iso8601, date_source: "received_stamp" }
+    elsif (y, m = filename_month(filenames, year))
+      { date: format("%04d-%02d", y, m), date_source: "filename" }
     elsif month
       { date: format("%04d-%02d", year, month), date_source: "folder" }
     elsif year
       { date: year.to_s, date_source: "folder" }
+    elsif (y = filename_year(filenames))
+      { date: y.to_s, date_source: "filename" }
     else
       { date: nil, date_source: nil }
     end
@@ -76,6 +90,32 @@ module Filing
     dates = dates.select { |d| d.year == year } if year
     dates = dates.select { |d| d.month == month } if month && dates.any? { |d| d.month == month }
     dates.min_by { |d| [stamp ? (d - stamp).abs : 0, d] }
+  end
+
+  # A year and month named in words, kept only where the year matches the
+  # folder's, if there is one.
+  def self.filename_month(filenames, year)
+    filenames.each do |f|
+      File.basename(f, ".*").scan(FILENAME_MONTH) do |y, name|
+        return [y.to_i, month_number(name)] if (year.nil? || y.to_i == year) && plausible_year?(y.to_i)
+      end
+    end
+    nil
+  end
+
+  # The first year-like number in any of the names.  Only reached with no
+  # folder year, so there's nothing to check it against but the calendar.
+  def self.filename_year(filenames)
+    filenames.each do |f|
+      File.basename(f, ".*").scan(FILENAME_YEAR) do |(y)|
+        return y.to_i if plausible_year?(y.to_i)
+      end
+    end
+    nil
+  end
+
+  def self.plausible_year?(year)
+    year.between?(2000, Date.today.year)
   end
 
   def self.candidates(stem)
