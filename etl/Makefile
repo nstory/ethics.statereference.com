@@ -69,19 +69,22 @@ disclosure-pdfs:
 disclosure-pdfs-clean:
 	rm -rf $(OUTPUT_DIR)/pdfs
 
-# Upload $(OUTPUT_DIR)/pdfs to the R2 bucket served at ethics-files.nathanielstory.com,
-# so <filename> lands at /disclosures/<filename>.  Needs an `r2` rclone remote;
-# see README.md.  --size-only because R2 doesn't keep the local mtimes; rclone
-# sync deletes what's no longer local, so PDFs dropped from pdfs.jsonl go away
-# in the bucket too.
-R2_SYNC = rclone sync $(OUTPUT_DIR)/pdfs $(R2_REMOTE):$(R2_BUCKET) \
+# Upload $(OUTPUT_DIR)/pdfs/disclosures to the R2 bucket served at
+# ethics-files.nathanielstory.com, so <filename> lands at /disclosures/<filename>.
+# Needs an `r2` rclone remote; see README.md.  --size-only because R2 doesn't
+# keep the local mtimes; rclone sync deletes what's no longer local, so PDFs
+# dropped from pdfs.jsonl go away in the bucket too.  Only disclosures/ is
+# synced, so the rest of the bucket is left alone.
+R2_SYNC = rclone sync $(OUTPUT_DIR)/pdfs/disclosures $(R2_REMOTE):$(R2_BUCKET)/disclosures \
 	  --size-only --transfers 16 --checkers 32 --fast-list --stats-one-line --progress \
 	  --header-upload "Cache-Control: public, max-age=31536000, immutable"
 
-# guard: an empty or missing directory would empty the bucket
+# guard: a missing or partial directory would delete PDFs from the bucket
+R2_MIN_FILES ?= 15578
 r2-sync:
-	@test -n "$$(ls -A $(OUTPUT_DIR)/pdfs/disclosures 2>/dev/null)" || \
-	  { echo "$(OUTPUT_DIR)/pdfs/disclosures is empty; run make disclosure-pdfs first"; exit 1; }
+	@n=$$(find $(OUTPUT_DIR)/pdfs/disclosures -type f 2>/dev/null | wc -l | tr -d " "); \
+	  test "$$n" -ge $(R2_MIN_FILES) || \
+	  { echo "$(OUTPUT_DIR)/pdfs/disclosures has $$n files, expected at least $(R2_MIN_FILES); run make disclosure-pdfs first"; exit 1; }
 	$(R2_SYNC)
 
 # What would `make r2-sync` upload and delete?
