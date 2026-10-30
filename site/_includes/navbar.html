@@ -1,12 +1,16 @@
 {%- comment -%}
-  Site navbar: the brand alone.  The search box isn't part of it -- it belongs
-  to the page, which renders search-form.html where it wants it.  On / and
-  /search/ that's a band directly below this, above what the search acts on.
+  Site navbar: the brand and a link out to the other databases.  The search box
+  isn't part of it -- it belongs to the page, which renders search-form.html
+  where it wants it.  On / and /search/ that's a band directly below this, above
+  what the search acts on.
 {%- endcomment -%}
-<nav class="navbar navbar-expand bg-body border-bottom">
+<nav class="navbar navbar-expand flex-wrap bg-body border-bottom">
   <div class="container">
     <a class="navbar-brand py-0" href="{{ '/' | relative_url }}">
       <img src="{{ '/assets/img/logo-caps@2x.png' | relative_url }}" width="145" height="32" class="d-inline-block align-text-top" alt="StateReference Ethics">
     </a>
+    <ul class="navbar-nav me-auto small">
+      <li class="nav-item"><a class="nav-link" href="https://www.statereference.com/">All databases</a></li>
+    </ul>
   </div>
 </nav>
