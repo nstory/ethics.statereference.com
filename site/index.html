@@ -44,17 +44,14 @@ layout: default
     <div class="col-lg-6">
       <h2>Public records requests</h2>
       <p>This database is populated with documents received under the Massachusetts Public Records Law. The requests I made are listed below.</p>
-      {%- comment -%}
-        One item per drop, newest first: the date it was received in a gutter
-        on the left, the custodian and notes beside it.  See .drops.
-      {%- endcomment %}
       <ol class="drops list-unstyled small">
         {%- assign drops = site.data.disclosure_drops | sort: "date" | reverse -%}
         {%- for drop in drops %}
         <li>
-          {%- comment -%} url is where the drop was published; not every drop has one {%- endcomment -%}
+          {%- assign zip_url = site.files_url | append: "/ethics-drops/" | append: drop.filename -%}
+          {%- assign href = drop.url | default: zip_url -%}
           {%- assign received = drop.date | date: "%b %-d, %Y" %}
-          <time datetime="{{ drop.date | date: '%Y-%m-%d' }}">{% if drop.url %}<a href="{{ drop.url | escape }}">{{ received }}</a>{% else %}{{ received }}{% endif %}</time>
+          <time datetime="{{ drop.date | date: '%Y-%m-%d' }}"><a href="{{ href | escape }}">{{ received }}</a></time>
           <div>
             <div class="fw-semibold">{{ drop.custodian }}</div>
             {%- if drop.notes %}
