@@ -5,11 +5,13 @@ OUTPUT_DIR ?= output
 MODEL_DIR ?= models/chandra-mlx-4bit
 R2_REMOTE ?= r2
 R2_BUCKET ?= ethics-files
+DROPS_URL ?= https://ethics-files.nathanielstory.com/ethics-drops
+DROPS_SHA256 ?= drops.sha256
 
 DROPS  := $(wildcard $(DROP_DIR)/*.zip)
 STAMPS := $(patsubst $(DROP_DIR)/%.zip,$(PDF_DIR)/%/.extracted,$(DROPS))
 
-.PHONY: all clean r2-sync r2-sync-dry-run pdfs pdfs-clean $(OUTPUT_DIR)/pdfs.jsonl metadata disclosure-pdfs disclosure-pdfs-clean ocr ocr-model ocr-status ocr-clean ocr-model-clean
+.PHONY: all clean r2-sync r2-sync-dry-run drops-sync drops-download pdfs pdfs-clean $(OUTPUT_DIR)/pdfs.jsonl metadata disclosure-pdfs disclosure-pdfs-clean ocr ocr-model ocr-status ocr-clean ocr-model-clean
 
 # Everything: extract, OCR, then build the output.  The output is made by a
 # sub-make so it runs after OCR even under -j.
@@ -90,6 +92,22 @@ r2-sync:
 # What would `make r2-sync` upload and delete?
 r2-sync-dry-run:
 	$(R2_SYNC) --dry-run
+
+# Upload the zips in $(DROP_DIR) as they are, so <drop>.zip lands at
+# $(DROPS_URL)/<drop>.zip, and record their checksums for drops-download.  copy,
+# not sync, so nothing in the bucket is ever deleted; a drop that has changed is
+# overwritten.
+drops-sync:
+	cd $(DROP_DIR) && shasum -a 256 *.zip > $(abspath $(DROPS_SHA256))
+	rclone copy $(DROP_DIR) $(R2_REMOTE):$(R2_BUCKET)/ethics-drops \
+	  --include "*.zip" --stats-one-line --progress
+
+# Fetch whichever drops in $(DROPS_SHA256) are missing from $(DROP_DIR), then
+# verify all of them.  Needs no R2 credentials.
+drops-download:
+	awk '{print "$(DROPS_URL)/" $$2}' $(DROPS_SHA256) | \
+	  wget --no-clobber --directory-prefix=$(DROP_DIR) --input-file=-
+	cd $(DROP_DIR) && shasum -a 256 -c $(abspath $(DROPS_SHA256))
 
 ocr-model-clean:
 	rm -rf $(MODEL_DIR)
